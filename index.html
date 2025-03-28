@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="static/validation.css" />
-    <link rel="stylesheet" href="" />
+    <link rel="stylesheet" href="static/style.css" />
     <title>Forum</title>
   </head>
   <body>
@@ -12,12 +12,13 @@
       <a class="auth-section" href="#">Logo</a>
       <a class="auth-section" href="#">Notification</a>
       <a href="#">Messages</a>
-      <a href="#" class="toLogIn">Login</a>
-      <a href="#" class="toSignUp">SignUp</a>
+      <a href="#" id="toLogIn">Login</a>
+      <a href="#" id="toSignUp">SignUp</a>
+      
     </header>
 
     <!-- Register Section -->
-    <section id="signup" class="class="container"" style="display: none">
+    <section id="signup" class="container" style="display: none;" >
       <div class="image-section">
         <div class="shape-1"></div>
         <div class="shape-2"></div>
@@ -32,7 +33,11 @@
           <a href="/" class="back-link">Back to the home</a>
         </div>
       </div>
-      <form>
+
+      <div class="form-section">
+        <div class="form-container">
+   
+      <form  id="form">
         <h2>SignUp</h2>
         <div class="input-group">
           <label for="firstname">First Name</label>
@@ -50,7 +55,7 @@
           <label for="age">Age</label>
           <input type="number" name="age" min="13" id="age" required />
         </div>
-        <div class="input-group">
+        <div class="input-group gender">
           <label for="gender">Gender</label>
           <input type="radio" name="gender" id="male" value="Male" required />
           <label for="male">Male</label>
@@ -92,6 +97,8 @@
         <p>Already have an account? <a href="#" class="toLogIn">Login</a></p>
         <button type="submit">Sign Up</button>
       </form>
+    </div>
+    </div>
     </section>
 
     <!-- Login Section -->
@@ -110,6 +117,8 @@
           <a href="/" class="back-link">Back to the home</a>
         </div>
       </div>
+      <div class="form-section">
+        <div class="form-container">
       <form>
         <h2>Login</h2>
         <div class="input-group">
@@ -148,6 +157,8 @@
         <p>Don't have an account? <a href="#" class="toSignUp">SignUp</a></p>
         <button type="submit">Login</button>
       </form>
+    </div>
+  </div>
     </section>
     <script src="script/validation.js"></script>
   </body>
