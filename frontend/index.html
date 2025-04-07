@@ -10,22 +10,22 @@
   <body>
     <!-- Navigation  bar-->
     <header>
-      <a class="auth-section" href="#">Logo</a>
-      <a class="auth-section" href="#">Notification</a>
-      <a href="#">Messages</a>
-      <a href="#" id="toLogIn" class="auth-section">Login</a>
-      <a href="#" id="toSignUp" class="auth-section">SignUp</a>
+      <a href="#login" data-link>Login</a>
+      <a href="#signup" data-link>Signup</a>
+      <a href="#posts" data-link>Posts</a>
+      <a href="#chat" data-link>Chat</a>
+
       <a href="#" id="toLogOut" class="auth-section" style="display: none"
         >Logout</a
       >
-    </header>
+    </header
 
     <main>
       <section id="welcomeMessage">
         <h1>Welcome to Our Forum!</h1>
         <p>Please log in or sign up to access our community.</p>
-        <a href="#" id="toLogIn">Login</a>
-        <a href="#" id="toSignUp">SignUp</a>
+        <a href="#login" id="toLogIn">Login</a>
+        <a href="#signup" id="toSignUp">SignUp</a>
       </section>
     </main>
 
@@ -90,9 +90,7 @@
               Log in to your account to continue your journey with us. We're
               excited to show you what's new!
             </p>
-            <br />
-            <br />
-            <a href="/" class="back-link">Back to the home</a>
+           
           </div>
         </div>
 
@@ -162,7 +160,7 @@
                 />
               </div>
               <p>
-                Already have an account? <a href="#" class="toLogIn">Login</a>
+                Already have an account? <a href="#login" class="toLogIn">Login</a>
               </p>
               <button type="submit">Sign Up</button>
             </form>
@@ -172,7 +170,7 @@
     </template>
 
     <!-- Login Section -->
-    <template id="loginTemplate">
+    
       <section id="login">
         <div class="image-section">
           <div class="shape-1"></div>
@@ -183,9 +181,7 @@
               Log in to your account to continue your journey with us. We're
               excited to show you what's new!
             </p>
-            <br />
-            <br />
-            <a href="/" class="back-link">Back to the home</a>
+           
           </div>
         </div>
         <div class="form-section">
@@ -226,7 +222,7 @@
                 <input type="password" name="password" id="password" required />
               </div>
               <p>
-                Don't have an account? <a href="#" class="toSignUp">SignUp</a>
+                Don't have an account? <a href="#signup" class="toSignUp">SignUp</a>
               </p>
               <button class="btn" type="submit">Login</button>
             </form>
