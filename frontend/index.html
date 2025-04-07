@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="static/validation.css" />
+    <link rel="stylesheet" href="static/style.css" />
+    <title>Forum</title>
+  </head>
+  <body>
+    <!-- Navigation  bar-->
+    <header>
+      <a class="auth-section" href="#">Logo</a>
+      <a class="auth-section" href="#">Notification</a>
+      <a href="#">Messages</a>
+      <a href="#" id="toLogIn" class="auth-section">Login</a>
+      <a href="#" id="toSignUp" class="auth-section">SignUp</a>
+      <a href="#" id="toLogOut" class="auth-section" style="display: none"
+        >Logout</a
+      >
+    </header>
+
+    <main>
+      <section id="welcomeMessage">
+        <h1>Welcome to Our Forum!</h1>
+        <p>Please log in or sign up to access our community.</p>
+        <a href="#" id="toLogIn">Login</a>
+        <a href="#" id="toSignUp">SignUp</a>
+      </section>
+    </main>
+
+    <!-- Posts Section -->
+    <template id="postTemplate">
+      <section id="posts" class="container">
+        <header>
+          <h2>Posts</h2>
+          <button class="btn" id="btn-create-post">Create Posts</button>
+        </header>
+        <div>
+          <!-- Posts will be dynamically loaded here -->
+        </div>
+      </section>
+    </template>
+
+    <!-- Chat Section-->
+
+    <template id="chatTemplate">
+      <section id="chat" class="container">
+        <header>
+          <h2>Private Messages</h2>
+        </header>
+        <div class="chat-container">
+          <!-- Online Users List -->
+          <aside id="onlineUsers">
+            <h3>Online Users</h3>
+            <ul id="userList">
+              <!-- Users will be dynamically added here -->
+            </ul>
+          </aside>
+
+          <!-- Chat Window-->
+
+          <div id="chat-window">
+            <div id="messages">
+              <!-- Messages will be dynamically loaded here -->
+              <form id="messageForm">
+                <input
+                  type="text"
+                  id="messageInput"
+                  placeholder="Type your message..."
+                  required
+                />
+                <button type="submit">Send</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+    </template>
+
+    <!-- Register Section -->
+    <template id="signupTemplate">
+      <section id="signup">
+        <div class="image-section">
+          <div class="shape-1"></div>
+          <div class="shape-2"></div>
+          <div class="image-content">
+            <h1>Welcome Back!</h1>
+            <p>
+              Log in to your account to continue your journey with us. We're
+              excited to show you what's new!
+            </p>
+            <br />
+            <br />
+            <a href="/" class="back-link">Back to the home</a>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-container">
+            <form id="form">
+              <h2>SignUp</h2>
+              <div class="input-group">
+                <label for="firstname">First Name</label>
+                <input type="text" name="firstname" id="firstname" required />
+              </div>
+              <div class="input-group">
+                <label for="lastname">Last Name</label>
+                <input type="text" name="lastname" id="lastname" />
+              </div>
+              <div class="input-group">
+                <label for="nickname">Nickname</label>
+                <input type="text" name="nickname" id="nickname" required />
+              </div>
+              <div class="input-group">
+                <label for="age">Age</label>
+                <input type="number" name="age" min="13" id="age" required />
+              </div>
+              <div class="input-group gender">
+                <label for="gender">Gender</label>
+                <input
+                  type="radio"
+                  name="gender"
+                  id="male"
+                  value="Male"
+                  required
+                />
+                <label for="male">Male</label>
+                <input
+                  type="radio"
+                  name="gender"
+                  id="female"
+                  value="Female"
+                  required
+                />
+                <label for="female">Female</label>
+                <input
+                  type="radio"
+                  name="gender"
+                  id="other"
+                  value="Other"
+                  required
+                  checked
+                />
+                <label for="other">Other</label>
+              </div>
+              <div class="input-group">
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email" />
+              </div>
+              <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" required />
+              </div>
+              <div class="input-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  id="confirmPassword"
+                  required
+                />
+              </div>
+              <p>
+                Already have an account? <a href="#" class="toLogIn">Login</a>
+              </p>
+              <button type="submit">Sign Up</button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </template>
+
+    <!-- Login Section -->
+    <template id="loginTemplate">
+      <section id="login">
+        <div class="image-section">
+          <div class="shape-1"></div>
+          <div class="shape-2"></div>
+          <div class="image-content">
+            <h1>Welcome Back!</h1>
+            <p>
+              Log in to your account to continue your journey with us. We're
+              excited to show you what's new!
+            </p>
+            <br />
+            <br />
+            <a href="/" class="back-link">Back to the home</a>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-container">
+            <form>
+              <h2>Login</h2>
+              <div class="input-group">
+                <label for="nicknameRadio">Nickname</label>
+                <input
+                  type="radio"
+                  name="loginType"
+                  value="nickname"
+                  id="nicknameRadio"
+                  required
+                />
+                <label for="emailRadio">Email</label>
+                <input
+                  type="radio"
+                  name="loginType"
+                  value="email"
+                  id="emailRadio"
+                  required
+                />
+              </div>
+
+              <div id="nicknameInput" class="input-group">
+                <label for="nickname">Enter your Nickname</label>
+                <input type="text" id="nickname" name="nickname" />
+              </div>
+
+              <div id="emailInput" class="input-group">
+                <label for="email">Enter your Email</label>
+                <input type="email" id="email" name="email" />
+              </div>
+
+              <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" required />
+              </div>
+              <p>
+                Don't have an account? <a href="#" class="toSignUp">SignUp</a>
+              </p>
+              <button class="btn" type="submit">Login</button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </template>
+  </body>
+</html>
