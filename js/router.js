@@ -1,78 +1,87 @@
-const pageTitle = "Forum";
-
-// Map routes to templates and metadata
-const Routes = {
-  login: {
-    templateId: "loginTemplate",
-    title: "Login | " + pageTitle,
-    description: "Login to the forum",
-  },
-  signup: {
-    templateId: "signupTemplate",
-    title: "Sign Up | " + pageTitle,
-    description: "Create a new forum account",
-  },
-  posts: {
-    templateId: "postTemplate",
-    title: "Posts | " + pageTitle,
-    description: "Browse forum posts",
-  },
-  chat: {
-    templateId: "chatTemplate",
-    title: "Chat | " + pageTitle,
-    description: "Chat with users",
-  },
-  "/": {
-    templateId: null, // default welcome section
-    title: pageTitle,
-    description: "Welcome to the forum",
-  },
-  404: {
-    templateId: null,
-    title: "404 | " + pageTitle,
-    description: "Page not found",
-  },
-};
-
-// Handle navigation clicks
-document.addEventListener("click", (e) => {
-  const target = e.target.closest("a[data-link]");
-  if (!target) return;
-
-  e.preventDefault();
-  const path = target.getAttribute("href").replace("#", "");
-  window.location.hash = path;
-});
-
-// Load route content
-const locationHandler = async () => {
-  let location = window.location.hash.replace("#", "");
-  if (location.length === 0) {
-    location = "/";
+export class Router {
+  constructor() {
+    this.routes = {}; // Stores routes and their associated templates
+    this.currentRoute = null; // Keeps track of the current route
+    this.initEventListeners(); // Initialize event listeners for navigation
   }
 
-  const route = Routes[location] || Routes[404];
+  initEventListeners() {
+    window.addEventListener("popstate", () => {
+      this.loadRoute(window.location.hash); // Hash-based routing
+    });
 
-  const main = document.querySelector("main");
-  main.innerHTML = ""; // Clear existing content
+    document.addEventListener("click", (e) => {
+      const link = e.target.closest("a[data-page]");
+      if (link) {
+        e.preventDefault();
+        const page = link.getAttribute("data-page");
+        this.navigateTo(page); // Update URL with hash
+      }
+    });
+  }
 
-  if (route.templateId) {
-    const template = document.getElementById(route.templateId);
-    if (template) {
-      const clone = template.content.cloneNode(true);
-      main.appendChild(clone);
+  // Add a route with path, templateId, and optional callback
+  addRoute(path, templateId, callback) {
+    this.routes[path] = { templateId, callback };
+  }
+
+  // Navigate to a specific route and push state
+  navigateTo(path, data = {}) {
+    window.history.pushState({}, "", `#${path}`); // Use hash-based navigation
+    this.loadRoute(path, data); // Load the corresponding route content
+  }
+
+  // Load the route content for the given path
+  async loadRoute(path, data = {}) {
+    const route = this.routes[path]; // Get the route for the current path
+    if (!route) {
+      this.navigateTo("/"); // Redirect to home if route doesn't exist
+      return;
     }
-  } else {
-    // Show default welcome section or 404 message
-    document.getElementById("welcomeMessage").style.display =
-      location === "/" ? "block" : "none";
+
+    if (this.currentRoute === path) return; // Avoid reloading the same route
+    this.currentRoute = path;
+
+    const template = document.getElementById(route.templateId);
+    if (!template) {
+      console.error(`Template ${route.templateId} not found`);
+      return;
+    }
+
+    // Clear existing content before loading the new template
+    const main = document.querySelector("main");
+    main.innerHTML = ""; // Clear the content of the main element
+
+    // Clone and insert the new content
+    const content = template.content.cloneNode(true);
+    main.appendChild(content);
+
+    // Execute the callback if it exists
+    if (route.callback && typeof route.callback === "function") {
+      await route.callback(data);
+    }
+
+    // Update active navigation
+    this.updateActiveNav(path);
   }
 
-  document.title = route.title;
-  document
-    .querySelector("meta[name=description]")
-    .setAttribute("content", route.description);
-};
+  // Update the active navigation link based on the current route
+  updateActiveNav(path) {
+    document.querySelectorAll("[data-page]").forEach((link) => {
+      link.classList.remove("active");
+      link.ariaCurrent = null;
+    });
 
-window.addEventListener("hashchange", locationHandler);
-window.addEventListener("DOMContentLoaded", locationHandler); // on page load
+    const activeLink = document.querySelector(`[data-page="${path}"]`);
+    if (activeLink) {
+      activeLink.classList.add("active");
+      activeLink.ariaCurrent = "page";
+    }
+  }
+
+  // Initialize the router by loading the initial route
+  start() {
+    const path = window.location.hash.slice(1) || "/"; // Use hash to get the route
+    this.loadRoute(path); // Load the current route or default to home
+  }
+}

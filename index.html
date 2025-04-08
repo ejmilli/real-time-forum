@@ -8,26 +8,21 @@
     <title>Forum</title>
   </head>
   <body>
-    <!-- Navigation  bar-->
-    <header>
-      <a href="#login" data-link>Login</a>
-      <a href="#signup" data-link>Signup</a>
-      <a href="#posts" data-link>Posts</a>
-      <a href="#chat" data-link>Chat</a>
+    <nav>
+      <a href="#/" data-page="/">Home</a>
+      <a href="#/posts" data-page="/posts">Posts</a>
+      <a href="#/chat" data-page="/chat">Chat</a>
+      <a href="#/signup" data-page="/signup">Sign Up</a>
+      <a href="#/login" data-page="/login">Login</a>
+    </nav>
 
-      <a href="#" id="toLogOut" class="auth-section" style="display: none"
-        >Logout</a
-      >
-    </header
+    <main></main>
 
-    <main>
-      <section id="welcomeMessage">
-        <h1>Welcome to Our Forum!</h1>
-        <p>Please log in or sign up to access our community.</p>
-        <a href="#login" id="toLogIn">Login</a>
-        <a href="#signup" id="toSignUp">SignUp</a>
-      </section>
-    </main>
+    <!-- Home template -->
+    <template id="homeTemplate">
+      <h1>Home</h1>
+      <p>Welcome to the Home page!</p>
+    </template>
 
     <!-- Posts Section -->
     <template id="postTemplate">
@@ -43,7 +38,6 @@
     </template>
 
     <!-- Chat Section-->
-
     <template id="chatTemplate">
       <section id="chat" class="container">
         <header>
@@ -59,7 +53,6 @@
           </aside>
 
           <!-- Chat Window-->
-
           <div id="chat-window">
             <div id="messages">
               <!-- Messages will be dynamically loaded here -->
@@ -90,7 +83,6 @@
               Log in to your account to continue your journey with us. We're
               excited to show you what's new!
             </p>
-           
           </div>
         </div>
 
@@ -160,7 +152,8 @@
                 />
               </div>
               <p>
-                Already have an account? <a href="#login" class="toLogIn">Login</a>
+                Already have an account?
+                <a href="/login" class="toLogIn">Login</a>
               </p>
               <button type="submit">Sign Up</button>
             </form>
@@ -170,7 +163,7 @@
     </template>
 
     <!-- Login Section -->
-    
+    <template id="loginTemplate">
       <section id="login">
         <div class="image-section">
           <div class="shape-1"></div>
@@ -181,7 +174,6 @@
               Log in to your account to continue your journey with us. We're
               excited to show you what's new!
             </p>
-           
           </div>
         </div>
         <div class="form-section">
@@ -222,7 +214,8 @@
                 <input type="password" name="password" id="password" required />
               </div>
               <p>
-                Don't have an account? <a href="#signup" class="toSignUp">SignUp</a>
+                Don't have an account?
+                <a href="/signup" class="toSignUp">SignUp</a>
               </p>
               <button class="btn" type="submit">Login</button>
             </form>
@@ -230,5 +223,8 @@
         </div>
       </section>
     </template>
+
+    <!-- Script -->
+    <script type="module" src="js/app.js"></script>
   </body>
 </html>
