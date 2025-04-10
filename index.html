@@ -9,63 +9,44 @@
   </head>
   <body>
     <nav>
-      <a href="#/" data-page="/">Home</a>
-      <a href="#/posts" data-page="/posts">Posts</a>
-      <a href="#/chat" data-page="/chat">Chat</a>
-      <a href="#/signup" data-page="/signup">Sign Up</a>
-      <a href="#/login" data-page="/login">Login</a>
+      <a href="#posts" data-page="posts">Posts</a>
+      <a href="#signup" data-page="signup">Sign Up</a>
+      <a href="#login" data-page="login">Login</a>
     </nav>
 
     <main></main>
 
-    <!-- Home template -->
     <template id="homeTemplate">
-      <h1>Home</h1>
-      <p>Welcome to the Home page!</p>
-    </template>
+      <section id="home">
+        <div class="hero">
+          <h1>Welcome to YourForum</h1>
+          <p>
+            Join our community to participate in discussions about [your forum
+            topic]
+          </p>
 
-    <!-- Posts Section -->
-    <template id="postTemplate">
-      <section id="posts" class="container">
-        <header>
-          <h2>Posts</h2>
-          <button class="btn" id="btn-create-post">Create Posts</button>
-        </header>
-        <div>
-          <!-- Posts will be dynamically loaded here -->
+          <div class="cta-buttons">
+            <a href="#signup" class="cta-button primary" data-page="signup"
+              >Sign Up</a
+            >
+            <a href="#login" class="cta-button secondary" data-page="login"
+              >Login</a
+            >
+          </div>
         </div>
-      </section>
-    </template>
 
-    <!-- Chat Section-->
-    <template id="chatTemplate">
-      <section id="chat" class="container">
-        <header>
-          <h2>Private Messages</h2>
-        </header>
-        <div class="chat-container">
-          <!-- Online Users List -->
-          <aside id="onlineUsers">
-            <h3>Online Users</h3>
-            <ul id="userList">
-              <!-- Users will be dynamically added here -->
-            </ul>
-          </aside>
-
-          <!-- Chat Window-->
-          <div id="chat-window">
-            <div id="messages">
-              <!-- Messages will be dynamically loaded here -->
-              <form id="messageForm">
-                <input
-                  type="text"
-                  id="messageInput"
-                  placeholder="Type your message..."
-                  required
-                />
-                <button type="submit">Send</button>
-              </form>
-            </div>
+        <div class="features">
+          <div class="feature">
+            <h3>Connect with Others</h3>
+            <p>Join discussions with like-minded individuals</p>
+          </div>
+          <div class="feature">
+            <h3>Share Your Ideas</h3>
+            <p>Create posts and get feedback from the community</p>
+          </div>
+          <div class="feature">
+            <h3>Stay Updated</h3>
+            <p>Get notifications about topics you're interested in</p>
           </div>
         </div>
       </section>
@@ -153,7 +134,7 @@
               </div>
               <p>
                 Already have an account?
-                <a href="/login" class="toLogIn">Login</a>
+                <a href="#login" data-page="login" class="toLogIn">Login</a>
               </p>
               <button type="submit">Sign Up</button>
             </form>
@@ -215,7 +196,7 @@
               </div>
               <p>
                 Don't have an account?
-                <a href="/signup" class="toSignUp">SignUp</a>
+                <a href="#signup" data-page="signup">SignUp</a>
               </p>
               <button class="btn" type="submit">Login</button>
             </form>

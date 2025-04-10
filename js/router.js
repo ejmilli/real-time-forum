@@ -1,45 +1,51 @@
 export class Router {
   constructor() {
-    this.routes = {}; // Stores routes and their associated templates
-    this.currentRoute = null; // Keeps track of the current route
-    this.initEventListeners(); // Initialize event listeners for navigation
+    this.routes = {};
+    this.currentRoute = null;
+
+    // Bind methods to ensure correct 'this' context
+    this.handlePopState = this.handlePopState.bind(this);
+    this.handleClick = this.handleClick.bind(this);
+
+    this.initEventListeners();
   }
 
   initEventListeners() {
-    window.addEventListener("popstate", () => {
-      this.loadRoute(window.location.hash); // Hash-based routing
-    });
-
-    document.addEventListener("click", (e) => {
-      const link = e.target.closest("a[data-page]");
-      if (link) {
-        e.preventDefault();
-        const page = link.getAttribute("data-page");
-        this.navigateTo(page); // Update URL with hash
-      }
-    });
+    window.addEventListener("popstate", this.handlePopState);
+    document.addEventListener("click", this.handleClick);
   }
 
-  // Add a route with path, templateId, and optional callback
+  handlePopState() {
+    const path = window.location.hash.slice(1) || "signup";
+    this.loadRoute(path);
+  }
+
+  handleClick(e) {
+    const link = e.target.closest("a[href^='#']");
+    if (link) {
+      e.preventDefault();
+      const path = link.getAttribute("href").slice(1);
+      this.navigateTo(path);
+    }
+  }
+
   addRoute(path, templateId, callback) {
     this.routes[path] = { templateId, callback };
   }
 
-  // Navigate to a specific route and push state
   navigateTo(path, data = {}) {
-    window.history.pushState({}, "", `#${path}`); // Use hash-based navigation
-    this.loadRoute(path, data); // Load the corresponding route content
+    window.history.pushState({}, "", `#${path}`);
+    this.loadRoute(path, data);
   }
 
-  // Load the route content for the given path
   async loadRoute(path, data = {}) {
-    const route = this.routes[path]; // Get the route for the current path
+    const route = this.routes[path];
     if (!route) {
-      this.navigateTo("/"); // Redirect to home if route doesn't exist
+      this.navigateTo("signup"); // Default to signup
       return;
     }
 
-    if (this.currentRoute === path) return; // Avoid reloading the same route
+    if (this.currentRoute === path) return;
     this.currentRoute = path;
 
     const template = document.getElementById(route.templateId);
@@ -48,40 +54,37 @@ export class Router {
       return;
     }
 
-    // Clear existing content before loading the new template
     const main = document.querySelector("main");
-    main.innerHTML = ""; // Clear the content of the main element
-
-    // Clone and insert the new content
+    main.innerHTML = "";
     const content = template.content.cloneNode(true);
     main.appendChild(content);
 
-    // Execute the callback if it exists
     if (route.callback && typeof route.callback === "function") {
       await route.callback(data);
     }
 
-    // Update active navigation
-    this.updateActiveNav(path);
+    this.updateActiveNav();
   }
 
-  // Update the active navigation link based on the current route
-  updateActiveNav(path) {
-    document.querySelectorAll("[data-page]").forEach((link) => {
+  updateActiveNav() {
+    const currentHash = window.location.hash;
+
+    document.querySelectorAll("nav a").forEach((link) => {
       link.classList.remove("active");
-      link.ariaCurrent = null;
+      if (link.getAttribute("href") === currentHash) {
+        link.classList.add("active");
+      }
     });
-
-    const activeLink = document.querySelector(`[data-page="${path}"]`);
-    if (activeLink) {
-      activeLink.classList.add("active");
-      activeLink.ariaCurrent = "page";
-    }
   }
 
-  // Initialize the router by loading the initial route
   start() {
-    const path = window.location.hash.slice(1) || "/"; // Use hash to get the route
-    this.loadRoute(path); // Load the current route or default to home
+    const path = window.location.hash.slice(1) || "signup";
+    this.loadRoute(path);
+  }
+
+  // Clean up event listeners when router is destroyed
+  destroy() {
+    window.removeEventListener("popstate", this.handlePopState);
+    document.removeEventListener("click", this.handleClick);
   }
 }
