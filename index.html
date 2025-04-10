@@ -3,54 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="static/validation.css" />
-    <link rel="stylesheet" href="static/style.css" />
+
+    <link rel="stylesheet" href="css/style.css" />
     <title>Forum</title>
   </head>
   <body>
     <nav>
-      <a href="#posts" data-page="posts">Posts</a>
-      <a href="#signup" data-page="signup">Sign Up</a>
-      <a href="#login" data-page="login">Login</a>
+      <div class="navbar-left">&lt;/DevConfessions&gt;</div>
+
+      <div class="ctas-buttons">
+        <a href="#signup" data-page="signup" class="cts-button signup-btnn"
+          >Sign Up</a
+        >
+        <a href="#login" data-page="login" class="cts-button signup-btnn"
+          >Login</a
+        >
+      </div>
     </nav>
 
     <main></main>
-
-    <template id="homeTemplate">
-      <section id="home">
-        <div class="hero">
-          <h1>Welcome to YourForum</h1>
-          <p>
-            Join our community to participate in discussions about [your forum
-            topic]
-          </p>
-
-          <div class="cta-buttons">
-            <a href="#signup" class="cta-button primary" data-page="signup"
-              >Sign Up</a
-            >
-            <a href="#login" class="cta-button secondary" data-page="login"
-              >Login</a
-            >
-          </div>
-        </div>
-
-        <div class="features">
-          <div class="feature">
-            <h3>Connect with Others</h3>
-            <p>Join discussions with like-minded individuals</p>
-          </div>
-          <div class="feature">
-            <h3>Share Your Ideas</h3>
-            <p>Create posts and get feedback from the community</p>
-          </div>
-          <div class="feature">
-            <h3>Stay Updated</h3>
-            <p>Get notifications about topics you're interested in</p>
-          </div>
-        </div>
-      </section>
-    </template>
 
     <!-- Register Section -->
     <template id="signupTemplate">
@@ -205,7 +176,157 @@
       </section>
     </template>
 
+    <!--Home Page-->
+
+    <div class="phone-wrapper">
+       <!-- Floating Images -->
+  <img src="css/images/l.png" alt="Laptop" class="floating-image image-laptop">
+  <img src="css/images/people.png" alt="People" class="floating-image image-people">
+  <img src="css/images/c.png" alt="Microphone" class="floating-image image-microphone">
+      <div class="phone-container">
+        <div class="status-bar">
+          <span class="time">9:41</span>
+          <span class="icons">
+            <span>📶</span>
+            <span>📶</span>
+            <span>🔋</span>
+          </span>
+        </div>
+
+        <div class="content">
+          <div class="header">
+            <h1>DevConfessions</h1>
+            <p>Tech opinions & developer secrets</p>
+          </div>
+
+          <div class="welcome-message">
+            <h2>Welcome to DevConfessions</h2>
+            <p>
+              A safe space for developers to share their true feelings about
+              tech
+            </p>
+
+            <div class="cta-buttons">
+              <a href="#signup" class="cta-button signup-btn" data-page="signup"
+                >Sign Up</a
+              >
+              <a href="#login" class="cta-button login-btn" data-page="login"
+                >Login</a
+              >
+            </div>
+          </div>
+
+          <div class="tech-option negative">
+            <span>TypeScript</span>
+          </div>
+
+          <div class="tech-option positive">
+            <span>VS Code</span>
+          </div>
+
+          <div class="tech-option positive">
+            <span>Stack Overflow</span>
+          </div>
+
+          <div class="tech-option neutral">
+            <span>JavaScript</span>
+            <div class="reaction-buttons">
+              <span class="reaction-btn thumbs-down">👎</span>
+              <span class="reaction-btn thumbs-up">👍</span>
+            </div>
+          </div>
+
+          <div class="tech-option neutral">
+            <span>React</span>
+            <div class="reaction-buttons">
+              <span class="reaction-btn thumbs-down">👎</span>
+              <span class="reaction-btn thumbs-up">👍</span>
+            </div>
+          </div>
+
+          <div class="tech-option neutral">
+            <span>Daily Standups</span>
+            <div class="reaction-buttons">
+              <span class="reaction-btn thumbs-down">👎</span>
+              <span class="reaction-btn thumbs-up">👍</span>
+            </div>
+          </div>
+
+          <div class="tech-option neutral">
+            <span>Dark Mode IDEs</span>
+            <div class="reaction-buttons">
+              <span class="reaction-btn thumbs-down">👎</span>
+              <span class="reaction-btn thumbs-up">👍</span>
+            </div>
+          </div>
+
+          <div class="tech-option neutral">
+            <span>Debugging in Production</span>
+            <div class="reaction-buttons">
+              <span class="reaction-btn thumbs-down">👎</span>
+              <span class="reaction-btn thumbs-up">👍</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <div class="tab">
+            <span class="tab-icon">🚀</span>
+            <span>Home</span>
+          </div>
+          <div class="tab">
+            <span class="tab-icon">📅</span>
+            <span>Feed</span>
+          </div>
+          <div class="tab active">
+            <span class="tab-icon">✓</span>
+            <span>Vote</span>
+          </div>
+          <div class="tab">
+            <span class="tab-icon">🔖</span>
+            <span>Saved</span>
+          </div>
+          <div class="tab">
+            <span class="tab-icon">👤</span>
+            <span>Profile</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    </template>
+
     <!-- Script -->
     <script type="module" src="js/app.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Add interactivity for tech options
+        const techOptions = document.querySelectorAll(".tech-option.neutral");
+
+        techOptions.forEach((option) => {
+          const thumbsUp = option.querySelector(".thumbs-up");
+          const thumbsDown = option.querySelector(".thumbs-down");
+
+          if (thumbsUp) {
+            thumbsUp.addEventListener("click", () => {
+              option.classList.remove("neutral", "negative");
+              option.classList.add("positive");
+              option.innerHTML = `<span>${
+                option.querySelector("span").textContent
+              }</span>`;
+            });
+          }
+
+          if (thumbsDown) {
+            thumbsDown.addEventListener("click", () => {
+              option.classList.remove("neutral", "positive");
+              option.classList.add("negative");
+              option.innerHTML = `<span>${
+                option.querySelector("span").textContent
+              }</span>`;
+            });
+          }
+        });
+      });
+    </script>
   </body>
 </html>

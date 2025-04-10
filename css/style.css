@@ -1,8 +1,287 @@
-.toast-message {
-  color: red;
-  font-size: 0.9em;
-  margin-top: 5px;
-  background-color: rgba(255, 0, 0, 0.1); /* Light red background */
-  padding: 5px;
-  border-radius: 4px;
+:root {
+  --primary-bg: #f5f5f7;
+  --secondary-bg: #ffffff;
+  --accent-green: #4cd964;
+  --accent-red: #ff3b30;
+  --text-color: #1d1d1f;
+  --secondary-text: #86868b;
+  --border-color: #e0e0e0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+}
+
+body {
+  background-color: var(--secondary-text);
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+/* css for the home*/
+
+/* Wrapper for phone and floating images */
+.phone-wrapper {
+  position: relative;
+  width: 340px;
+  height: 680px;
+  margin: 20px auto;
+  z-index: 1; /* Ensure the phone is above the floating images */
+}
+
+/* Floating Images - Basic Styling */
+.floating-image {
+  position: absolute;
+  z-index: -1; /* Behind the phone */
+  opacity: 0.7;
+  filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.1));
+}
+
+/* Laptop Image */
+.image-laptop {
+  top: -80px;
+  left: -100px;
+  width: 280px;
+  animation: float-laptop 15s ease-in-out infinite;
+}
+
+/* People Image */
+.image-people {
+  bottom: -30px;
+  right: -120px;
+  width: 230px;
+  animation: float-people 20s ease-in-out infinite;
+}
+
+/* Microphone Image */
+.image-microphone {
+  top: 250px;
+  right: -70px;
+  width: 180px;
+  animation: float-microphone 12s ease-in-out infinite;
+}
+
+/* Animation Keyframes */
+@keyframes float-laptop {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(500px, -300px) rotate(2deg);
+  }
+  50% {
+    transform: translate(-200px, 400px) rotate(-1deg);
+  }
+  75% {
+    transform: translate(-250px, 500px) rotate(-3deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+@keyframes float-people {
+  0% {
+    transform: translate(0, 0);
+  }
+  30% {
+    transform: translate(-100px, 200px);
+  }
+  60% {
+    transform: translate(150px, -100px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes float-microphone {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translate(-20px, 40px) rotate(5deg);
+  }
+  66% {
+    transform: translate(100px, -400px) rotate(-5deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+/* Phone Container (make sure it stays above the floating images) */
+.phone-container {
+  width: 340px;
+  height: 680px;
+  background: var(--secondary-bg);
+  border-radius: 40px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  border: 10px solid #000;
+  z-index: 2;
+}
+
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 15px;
+  font-size: 14px;
+  background-color: var(--secondary-bg);
+}
+
+.status-bar .time {
+  font-weight: bold;
+}
+
+.content {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.header {
+  text-align: center;
+  padding: 5px 0 20px 0;
+}
+
+.header h1 {
+  font-size: 22px;
+  margin-bottom: 5px;
+}
+
+.header p {
+  font-size: 14px;
+  color: var(--secondary-text);
+}
+
+.tech-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fff;
+  padding: 12px 15px;
+  border-radius: 25px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.tech-option.positive {
+  background-color: var(--accent-green);
+  color: white;
+}
+
+.tech-option.negative {
+  background-color: var(--accent-red);
+  color: white;
+}
+
+.tech-option.neutral {
+  background-color: #fff;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.reaction-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.reaction-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.thumbs-down {
+  background-color: var(--accent-red);
+  color: white;
+}
+
+.thumbs-up {
+  background-color: var(--accent-green);
+  color: white;
+}
+
+.tab-bar {
+  display: flex;
+  justify-content: space-around;
+  padding: 15px 0;
+  background-color: var(--secondary-bg);
+  border-top: 1px solid var(--border-color);
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 12px;
+  color: var(--secondary-text);
+}
+
+.tab.active {
+  color: #ff9500;
+}
+
+.tab-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.welcome-message {
+  text-align: center;
+  padding: 20px 10px;
+  margin-bottom: 10px;
+}
+
+.welcome-message h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.welcome-message p {
+  font-size: 14px;
+  color: var(--secondary-text);
+  margin-bottom: 15px;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.cta-button {
+  padding: 12px 25px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+}
+
+.login-btn {
+  background-color: #007aff;
+  color: white;
+}
+
+.signup-btn {
+  background-color: #5856d6;
+  color: white;
 }
