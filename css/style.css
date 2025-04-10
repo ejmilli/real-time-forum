@@ -17,7 +17,7 @@
 }
 
 body {
-  background-color: var(--secondary-text);
+  background-color: var(--primary-bg);
   color: var(--text-color);
   display: flex;
   flex-direction: column;
@@ -25,99 +25,7 @@ body {
   min-height: 100vh;
   padding: 20px;
 }
-/* css for the home*/
-
-/* Wrapper for phone and floating images */
-.phone-wrapper {
-  position: relative;
-  width: 340px;
-  height: 680px;
-  margin: 20px auto;
-  z-index: 1; /* Ensure the phone is above the floating images */
-}
-
-/* Floating Images - Basic Styling */
-.floating-image {
-  position: absolute;
-  z-index: -1; /* Behind the phone */
-  opacity: 0.7;
-  filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.1));
-}
-
-/* Laptop Image */
-.image-laptop {
-  top: -80px;
-  left: -100px;
-  width: 280px;
-  animation: float-laptop 15s ease-in-out infinite;
-}
-
-/* People Image */
-.image-people {
-  bottom: -30px;
-  right: -120px;
-  width: 230px;
-  animation: float-people 20s ease-in-out infinite;
-}
-
-/* Microphone Image */
-.image-microphone {
-  top: 250px;
-  right: -70px;
-  width: 180px;
-  animation: float-microphone 12s ease-in-out infinite;
-}
-
-/* Animation Keyframes */
-@keyframes float-laptop {
-  0% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  25% {
-    transform: translate(500px, -300px) rotate(2deg);
-  }
-  50% {
-    transform: translate(-200px, 400px) rotate(-1deg);
-  }
-  75% {
-    transform: translate(-250px, 500px) rotate(-3deg);
-  }
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-}
-
-@keyframes float-people {
-  0% {
-    transform: translate(0, 0);
-  }
-  30% {
-    transform: translate(-100px, 200px);
-  }
-  60% {
-    transform: translate(150px, -100px);
-  }
-  100% {
-    transform: translate(0, 0);
-  }
-}
-
-@keyframes float-microphone {
-  0% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  33% {
-    transform: translate(-20px, 40px) rotate(5deg);
-  }
-  66% {
-    transform: translate(100px, -400px) rotate(-5deg);
-  }
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-}
-
-/* Phone Container (make sure it stays above the floating images) */
+/* css for the */
 .phone-container {
   width: 340px;
   height: 680px;
@@ -127,7 +35,9 @@ body {
   position: relative;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
   border: 10px solid #000;
-  z-index: 2;
+  margin: 20px auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .status-bar {
