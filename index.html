@@ -8,18 +8,7 @@
     <title>Forum</title>
   </head>
   <body>
-    <nav>
-      <div class="navbar-left">&lt;/DevConfessions&gt;</div>
-
-      <div class="ctas-buttons">
-        <a href="#signup" data-page="signup" class="cts-button signup-btnn"
-          >Sign Up</a
-        >
-        <a href="#login" data-page="login" class="cts-button signup-btnn"
-          >Login</a
-        >
-      </div>
-    </nav>
+    <nav></nav>
 
     <main></main>
 
@@ -178,6 +167,7 @@
 
     <!--Home Page-->
 
+    <template id="homeTemplate">
       <div class="phone-container">
         <div class="status-bar">
           <span class="time">9:41</span>
@@ -289,38 +279,76 @@
       </div>
     </template>
 
+    <!-- Posts Template -->
+
+    <template id="postTemplate">
+      <section id="posts">
+        <div class="posts-container">
+          <div class="posts-header">
+            <h1>Developer Confessions</h1>
+            <div class="post-actions">
+              <button id="newPostBtn" class="cta-button">New Confession</button>
+              <div class="filter-options">
+                <select id="filterPosts">
+                  <option value="all">All Confessions</option>
+                  <option value="popular">Most Popular</option>
+                  <option value="recent">Most Recent</option>
+                  <option value="controversial">Controversial</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div id="newPostForm" class="hidden">
+            <form id="createPostForm">
+              <h3>Share Your Developer Confession</h3>
+              <div class="input-group">
+                <label for="postTitle">Title</label>
+                <input
+                  type="text"
+                  id="postTitle"
+                  name="title"
+                  required
+                  placeholder="E.g., 'I secretly hate TypeScript'"
+                />
+              </div>
+              <div class="input-group">
+                <label for="postContent">Confession</label>
+                <textarea
+                  id="postContent"
+                  name="content"
+                  rows="4"
+                  required
+                  placeholder="Share your developer secrets..."
+                ></textarea>
+              </div>
+              <div class="input-group">
+                <label for="postTags">Tags (comma separated)</label>
+                <input
+                  type="text"
+                  id="postTags"
+                  name="tags"
+                  placeholder="E.g., javascript, frontend, debugging"
+                />
+              </div>
+              <div class="form-buttons">
+                <button type="button" id="cancelPostBtn" class="cancel-btn">
+                  Cancel
+                </button>
+                <button type="submit" class="submit-btn">Confess</button>
+              </div>
+            </form>
+          </div>
+
+          <div id="postsContainer" class="posts-list">
+            <!-- Posts will be loaded dynamically here -->
+            <div class="loading-spinner">Loading confessions...</div>
+          </div>
+        </div>
+      </section>
+    </template>
+
     <!-- Script -->
     <script type="module" src="js/app.js"></script>
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        // Add interactivity for tech options
-        const techOptions = document.querySelectorAll(".tech-option.neutral");
-
-        techOptions.forEach((option) => {
-          const thumbsUp = option.querySelector(".thumbs-up");
-          const thumbsDown = option.querySelector(".thumbs-down");
-
-          if (thumbsUp) {
-            thumbsUp.addEventListener("click", () => {
-              option.classList.remove("neutral", "negative");
-              option.classList.add("positive");
-              option.innerHTML = `<span>${
-                option.querySelector("span").textContent
-              }</span>`;
-            });
-          }
-
-          if (thumbsDown) {
-            thumbsDown.addEventListener("click", () => {
-              option.classList.remove("neutral", "positive");
-              option.classList.add("negative");
-              option.innerHTML = `<span>${
-                option.querySelector("span").textContent
-              }</span>`;
-            });
-          }
-        });
-      });
-    </script>
   </body>
 </html>

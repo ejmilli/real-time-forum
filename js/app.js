@@ -16,8 +16,6 @@ import {
 
 import { isAuthenticated, setAuthToken, updateNavigation } from "./auth.js";
 
-import { loadPosts, setupPostsHandlers } from "./posts.js";
-
 document.addEventListener("DOMContentLoaded", () => {
   const router = new Router();
 
@@ -31,16 +29,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   router.addRoute("login", "loginTemplate", () => {
     setupLoginFormHandler(router);
-  });
-
-  // Protected routes
-  router.addRoute("posts", "postsTemplate", () => {
-    if (!isAuthenticated()) {
-      router.navigateTo("login");
-      return;
-    }
-    loadPosts();
-    setupPostsHandlers();
   });
 
   // Initialize navigation based on auth state
@@ -66,6 +54,16 @@ function setupSignupFormHandler(router) {
     }
 
     try {
+      // For development, simulate a successful signup
+      // In production, this would be an actual API call
+      setTimeout(() => {
+        setAuthToken("fake-auth-token");
+        updateNavigation(router);
+        showSignupMessage("Signup successful!");
+        router.navigateTo("posts");
+      }, 1000);
+
+      /* Uncomment for production
       const response = await submitSignupForm(formData);
       const result = await response.json();
 
@@ -82,6 +80,7 @@ function setupSignupFormHandler(router) {
 
       showSignupMessage("Signup successful!");
       router.navigateTo("posts");
+      */
     } catch (err) {
       showSignupMessage("An error occurred. Please try again.");
       console.error(err);
@@ -93,6 +92,28 @@ function setupSignupFormHandler(router) {
 function setupLoginFormHandler(router) {
   const form = document.querySelector("#login form");
   if (!form) return;
+
+  // Handle login type toggle
+  const nicknameRadio = form.querySelector("#nicknameRadio");
+  const emailRadio = form.querySelector("#emailRadio");
+  const nicknameInput = form.querySelector("#nicknameInput");
+  const emailInput = form.querySelector("#emailInput");
+
+  if (nicknameRadio && emailRadio) {
+    nicknameRadio.addEventListener("change", () => {
+      nicknameInput.style.display = "block";
+      emailInput.style.display = "none";
+    });
+
+    emailRadio.addEventListener("change", () => {
+      nicknameInput.style.display = "none";
+      emailInput.style.display = "block";
+    });
+
+    // Set default
+    nicknameRadio.checked = true;
+    emailInput.style.display = "none";
+  }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -106,6 +127,16 @@ function setupLoginFormHandler(router) {
     }
 
     try {
+      // For development, simulate a successful login
+      // In production, this would be an actual API call
+      setTimeout(() => {
+        setAuthToken("fake-auth-token");
+        updateNavigation(router);
+        showLoginMessage("Login successful!");
+        router.navigateTo("posts");
+      }, 1000);
+
+      /* Uncomment for production
       const response = await submitLoginForm(formData);
       const result = await response.json();
 
@@ -122,6 +153,7 @@ function setupLoginFormHandler(router) {
 
       showLoginMessage("Login successful!");
       router.navigateTo("posts");
+      */
     } catch (err) {
       showLoginMessage("An error occurred. Please try again.");
       console.error(err);

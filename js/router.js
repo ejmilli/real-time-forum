@@ -16,7 +16,7 @@ export class Router {
   }
 
   handlePopState() {
-    const path = window.location.hash.slice(1) || "signup";
+    const path = window.location.hash.slice(1) || "/";
     this.loadRoute(path);
   }
 
@@ -41,7 +41,7 @@ export class Router {
   async loadRoute(path, data = {}) {
     const route = this.routes[path];
     if (!route) {
-      this.navigateTo("signup"); // Default to signup
+      this.navigateTo("/"); // Default to home
       return;
     }
 
@@ -63,7 +63,42 @@ export class Router {
       await route.callback(data);
     }
 
+    // Setup home template interactions if this is the home route
+    if (path === "/") {
+      this.setupHomeTechOptions();
+    }
+
     this.updateActiveNav();
+  }
+
+  // Add this new method to handle the tech options on home page
+  setupHomeTechOptions() {
+    const techOptions = document.querySelectorAll(".tech-option.neutral");
+
+    techOptions.forEach((option) => {
+      const thumbsUp = option.querySelector(".thumbs-up");
+      const thumbsDown = option.querySelector(".thumbs-down");
+
+      if (thumbsUp) {
+        thumbsUp.addEventListener("click", () => {
+          option.classList.remove("neutral", "negative");
+          option.classList.add("positive");
+          option.innerHTML = `<span>${
+            option.querySelector("span").textContent
+          }</span>`;
+        });
+      }
+
+      if (thumbsDown) {
+        thumbsDown.addEventListener("click", () => {
+          option.classList.remove("neutral", "positive");
+          option.classList.add("negative");
+          option.innerHTML = `<span>${
+            option.querySelector("span").textContent
+          }</span>`;
+        });
+      }
+    });
   }
 
   updateActiveNav() {
@@ -78,7 +113,7 @@ export class Router {
   }
 
   start() {
-    const path = window.location.hash.slice(1) || "signup";
+    const path = window.location.hash.slice(1) || "/";
     this.loadRoute(path);
   }
 
