@@ -72,6 +72,45 @@ export function submitSignupForm(formData) {
 }
 
 // Show validation error message
-export function showMessage(message) {
-  alert(message); // You can replace this with a more user-friendly message display.
+export function showMessage(message, isError = true) {
+  // create a meesage element
+  let messageEl = document.querySelector("#signup .message");
+
+  if (!messageEl) {
+    messageEl = document.createElement("div");
+    messageEl.className = "message";
+    const form = document.querySelector("#signup form");
+    form.insertBefore(messageEl, form.querySelector('button[type="submit"]'));
+  }
+
+  messageEl.textContent = message;
+  messageEl.className = `message ${isError ? "error" : "success"}`;
+
+  const style = document.createElement("style");
+  style.textContent = `
+    .message {
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-size: 14px;
+    }
+    .message.error {
+      background-color: #fef2f2;
+      color: #ef4444;
+      border: 1px solid #fca5a5;
+    }
+    .message.success {
+      background-color: #ecfdf5;
+      color: #10b981;
+      border: 1px solid #6ee7b7;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Clear message after 5 seconds if success
+  if (!isError) {
+    setTimeout(() => {
+      messageEl.remove();
+    }, 5000);
+  }
 }

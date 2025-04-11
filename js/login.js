@@ -50,6 +50,46 @@ export function submitLoginForm(formData) {
 }
 
 // Show validation error message
-export function showMessage(message) {
-  alert(message);
+export function showMessage(message, isError = true) {
+  // Check if message element exists, if not, create it
+  let messageEl = document.querySelector("#login .message");
+
+  if (!messageEl) {
+    messageEl = document.createElement("div");
+    messageEl.className = "message";
+    const form = document.querySelector("#login form");
+    form.insertBefore(messageEl, form.querySelector('button[type="submit"]'));
+  }
+
+  messageEl.textContent = message;
+  messageEl.className = `message ${isError ? "error" : "success"}`;
+
+  // Add CSS if not already in stylesheet
+  const style = document.createElement("style");
+  style.textContent = `
+    .message {
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-size: 14px;
+    }
+    .message.error {
+      background-color: #fef2f2;
+      color: #ef4444;
+      border: 1px solid #fca5a5;
+    }
+    .message.success {
+      background-color: #ecfdf5;
+      color: #10b981;
+      border: 1px solid #6ee7b7;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Clear message after 5 seconds if success
+  if (!isError) {
+    setTimeout(() => {
+      messageEl.remove();
+    }, 5000);
+  }
 }
