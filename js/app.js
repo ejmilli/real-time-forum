@@ -38,6 +38,36 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Setup the handlers for signup form
+async function setupSignupFormHandler(router) {
+  const form = document.querySelector("#signup form");
+  if (!form) return;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = collectSignupFormData();
+    const validationError = validateSignupData(formData);
+
+    if (validationError) {
+      showSignupMessage(validationError);
+      return;
+    }
+
+    try {
+      const response = await submitSignupForm(formData);
+      const result = await response.text(); // Change from json() to text()
+
+      if (!response.ok) {
+        throw new Error(result || "Signup failed");
+      }
+
+      showSignupMessage("Signup successful!", false);
+      router.navigateTo("/");
+    } catch (error) {
+      showSignupMessage(error.message);
+    }
+  });
+}
 
 // Setup the handlers for login form
 function setupLoginFormHandler(router) {
