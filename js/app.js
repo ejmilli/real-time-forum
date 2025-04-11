@@ -14,7 +14,7 @@ import {
   showMessage as showLoginMessage,
 } from "./login.js";
 
-import { isAuthenticated, setAuthToken, updateNavigation } from "./auth.js";
+import { updateNavigation } from "./auth.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const router = new Router();
@@ -53,17 +53,7 @@ function setupSignupFormHandler(router) {
       return;
     }
 
-    try {
-      // For development, simulate a successful signup
-      // In production, this would be an actual API call
-      setTimeout(() => {
-        setAuthToken("fake-auth-token");
-        updateNavigation(router);
-        showSignupMessage("Signup successful!");
-        router.navigateTo("posts");
-      }, 1000);
-
-      /* Uncomment for production
+    /* Uncomment for production
       const response = await submitSignupForm(formData);
       const result = await response.json();
 
@@ -72,19 +62,11 @@ function setupSignupFormHandler(router) {
         return;
       }
 
-      // Store auth token
-      if (result.token) {
-        setAuthToken(result.token);
-        updateNavigation(router);
-      }
+    
 
       showSignupMessage("Signup successful!");
       router.navigateTo("posts");
       */
-    } catch (err) {
-      showSignupMessage("An error occurred. Please try again.");
-      console.error(err);
-    }
   });
 }
 
@@ -124,39 +106,6 @@ function setupLoginFormHandler(router) {
     if (validationError) {
       showLoginMessage(validationError);
       return;
-    }
-
-    try {
-      // For development, simulate a successful login
-      // In production, this would be an actual API call
-      setTimeout(() => {
-        setAuthToken("fake-auth-token");
-        updateNavigation(router);
-        showLoginMessage("Login successful!");
-        router.navigateTo("posts");
-      }, 1000);
-
-      /* Uncomment for production
-      const response = await submitLoginForm(formData);
-      const result = await response.json();
-
-      if (!response.ok) {
-        showLoginMessage(result.error || "Login failed");
-        return;
-      }
-
-      // Store auth token
-      if (result.token) {
-        setAuthToken(result.token);
-        updateNavigation(router);
-      }
-
-      showLoginMessage("Login successful!");
-      router.navigateTo("posts");
-      */
-    } catch (err) {
-      showLoginMessage("An error occurred. Please try again.");
-      console.error(err);
     }
   });
 }

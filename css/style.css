@@ -269,7 +269,8 @@ form a:hover {
   border-radius: 40px;
   overflow: hidden;
   background-color: white;
-  box-shadow: var(--box-shadow);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+
   height: 700px;
   position: relative;
 }
