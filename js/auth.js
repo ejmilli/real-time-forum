@@ -1,3 +1,16 @@
+// auth.js
+export function isAuthenticated() {
+  return localStorage.getItem("authToken") !== null;
+}
+
+export function setAuthToken(token) {
+  localStorage.setItem("authToken", token);
+}
+
+export function clearAuthToken() {
+  localStorage.removeItem("authToken");
+}
+
 export function updateNavigation(router) {
   const nav = document.querySelector("nav");
 

@@ -38,37 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Setup the handlers for signup form
-function setupSignupFormHandler(router) {
-  const form = document.querySelector("#signup form");
-  if (!form) return;
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const formData = collectSignupFormData();
-    const validationError = validateSignupData(formData);
-
-    if (validationError) {
-      showSignupMessage(validationError);
-      return;
-    }
-
-    /* Uncomment for production
-      const response = await submitSignupForm(formData);
-      const result = await response.json();
-
-      if (!response.ok) {
-        showSignupMessage(result.error || "Signup failed");
-        return;
-      }
-
-    
-
-      showSignupMessage("Signup successful!");
-      router.navigateTo("posts");
-      */
-  });
-}
 
 // Setup the handlers for login form
 function setupLoginFormHandler(router) {

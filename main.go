@@ -16,36 +16,6 @@ import (
 )
 
 var tmpl *template.Template
-type ErrorData struct {
-	Type    string
-	Message string
-	Code    int
-}
-
-func ExecuteTmpl(w http.ResponseWriter, name string, data interface{}) {
-	err := tmpl.ExecuteTemplate(w, name, data)
-	if err != nil {
-		ExecuteError(w, "Tmpl", "Error executing page template", http.StatusInternalServerError)
-	}
-}
-
-func ExecuteError(w http.ResponseWriter, errtype, msg string, code int) {
-	errorData := ErrorData{errtype, msg, code}
-	w.WriteHeader(code)
-	if errorData.Type == "Tmpl" {
-		err := tmpl.ExecuteTemplate(w, "error.html", errorData)
-		if err != nil {
-			message := fmt.Sprintf("Error %d\n%s", errorData.Code, errorData.Message)
-			http.Error(w, message, http.StatusNotFound)
-		}
-		return
-	}
-	type errorJson struct {
-		Message string `json:"message"`
-	}
-	errJson := errorJson{errorData.Message}
-	json.NewEncoder(w).Encode(errJson)
-}
 
 func main() {
 	// Initialize database
@@ -90,17 +60,6 @@ func signupHandler(db *sql.DB) http.HandlerFunc {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-
-	
-	
-		if r.Method == http.MethodGet {
-			ExecuteTmpl(w, "index.html", nil)
-			return
-		} else if r.Method != http.MethodPost {
-			ExecuteError(w, "Tmpl", "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-	
 
 		// Parse form data
 		if err := r.ParseForm(); err != nil {
@@ -227,18 +186,60 @@ func checkExists(db *sql.DB, field, value string) (bool, error) {
 }
 
 func createUser(db *sql.DB, user *User) error {
-	_, err := db.Exec(`
-		INSERT INTO users 
-		(id, first_name, last_name, nickname, age, gender, email, password_hash)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-		user.ID,
-		user.FirstName,
-		user.LastName,
-		user.Nickname,
-		user.Age,
-		user.Gender,
-		user.Email,
-		user.PasswordHash,
+	result, err := db.Exec(`
+			INSERT INTO users 
+			(id, first_name, last_name, nickname, age, gender, email, password_hash)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			user.ID,
+			user.FirstName,
+			user.LastName,
+			user.Nickname,
+			user.Age,
+			user.Gender,
+			user.Email,
+			user.PasswordHash,
 	)
-	return err
+	
+	if err != nil {
+			fmt.Println("Database error:", err)
+			return err
+	}
+	
+	rows, _ := result.RowsAffected()
+	fmt.Println("Rows affected:", rows)
+	return nil
+}
+
+
+func ExecuteTmpl(w http.ResponseWriter, name string, data interface{}) {
+	err := tmpl.ExecuteTemplate(w, name, data)
+	if err != nil {
+		ExecuteError(w, "Tmpl", "Error executing page template", http.StatusInternalServerError)
+	}
+}
+
+// Execute error page if possible, otherwise use inbuilt http error
+func ExecuteError(w http.ResponseWriter, errtype, msg string, code int) {
+	errorData := ErrorData{errtype, msg, code}
+	w.WriteHeader(code)
+	if errorData.Type == "Tmpl" {
+		err := tmpl.ExecuteTemplate(w, "error.html", errorData)
+		if err != nil {
+			message := fmt.Sprintf("Error %d\n%s", errorData.Code, errorData.Message)
+			http.Error(w, message, http.StatusNotFound)
+		}
+		return
+	}
+	type errorJson struct {
+		Message string `json:"message"`
+	}
+	errJson := errorJson{errorData.Message}
+	json.NewEncoder(w).Encode(errJson)
+}
+
+
+type ErrorData struct {
+	Type    string
+	Message string
+	Code    int
 }
