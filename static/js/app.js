@@ -40,13 +40,22 @@ document.addEventListener("DOMContentLoaded", () => {
 // Setup the handlers for signup form
 async function setupSignupFormHandler(router) {
   const form = document.querySelector("#signup form");
-  if (!form) return;
+  if (!form) {
+    console.error("Signup form not found");
+    return;
+  }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    console.log("Form submitted"); // Debug log
 
+    // Collect form data
     const formData = collectSignupFormData();
+    console.log("Collected form data:", formData); // Debug log
+
+    // Validate form data
     const validationError = validateSignupData(formData);
+    console.log("Validation error:", validationError); // Debug log
 
     if (validationError) {
       showSignupMessage(validationError);
@@ -54,16 +63,25 @@ async function setupSignupFormHandler(router) {
     }
 
     try {
+      console.log("Attempting to submit form"); // Debug log
       const response = await submitSignupForm(formData);
-      const result = await response.text(); // Change from json() to text()
+      console.log("Response status:", response.status); // Debug log
+
+      const result = await response.text();
+      console.log("Response text:", result); // Debug log
 
       if (!response.ok) {
         throw new Error(result || "Signup failed");
       }
 
       showSignupMessage("Signup successful!", false);
-      router.navigateTo("/");
+
+      // Navigate to login page after success
+      setTimeout(() => {
+        router.navigateTo("login");
+      }, 1500);
     } catch (error) {
+      console.error("Error during signup:", error); // Debug log
       showSignupMessage(error.message);
     }
   });

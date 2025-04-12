@@ -1,20 +1,25 @@
 // auth.js
 export function isAuthenticated() {
-  return localStorage.getItem("authToken") !== null;
+  // We'll check with the server if the session is valid
+  return fetch("/api/check-auth", {
+    credentials: "include",
+  })
+    .then((response) => response.ok)
+    .catch(() => false);
 }
 
-export function setAuthToken(token) {
-  localStorage.setItem("authToken", token);
+export function logout() {
+  return fetch("/api/logout", {
+    method: "POST",
+    credentials: "include",
+  });
 }
 
-export function clearAuthToken() {
-  localStorage.removeItem("authToken");
-}
-
-export function updateNavigation(router) {
+export async function updateNavigation(router) {
   const nav = document.querySelector("nav");
+  const isLoggedIn = await isAuthenticated();
 
-  if (isAuthenticated()) {
+  if (isLoggedIn) {
     nav.innerHTML = `
       <a href="#posts" data-page="posts">Posts</a>
       <a href="#profile" data-page="profile">Profile</a>
@@ -22,8 +27,8 @@ export function updateNavigation(router) {
     `;
 
     // Add logout handler
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      clearAuthToken();
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await logout();
       router.navigateTo("/");
       updateNavigation(router);
     });

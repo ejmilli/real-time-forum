@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gofrs/uuid"
 	_ "github.com/mattn/go-sqlite3"
@@ -16,27 +17,31 @@ import (
 )
 
 var tmpl *template.Template
-
 func main() {
 	// Initialize database
 	db, err := sql.Open("sqlite3", "./users.db")
 	if err != nil {
-		panic("Failed to open database: " + err.Error())
+			panic("Failed to open database: " + err.Error())
 	}
 	defer db.Close()
 
 	// Create users table if not exists
 	if err := createUsersTable(db); err != nil {
-		panic("Failed to create table: " + err.Error())
+			panic("Failed to create table: " + err.Error())
 	}
 
-	// Setup routes
+	// Serve static files from the current directory (or specify your directory)
+	fs := http.FileServer(http.Dir("./"))
+	http.Handle("/", fs)
+	
+	// API routes - handle POST requests
 	http.HandleFunc("/signup", signupHandler(db))
 
 	// Start server
 	fmt.Println("Server running on :8080")
 	http.ListenAndServe(":8080", nil)
 }
+
 
 func createUsersTable(db *sql.DB) error {
 	query := `
@@ -242,4 +247,70 @@ type ErrorData struct {
 	Type    string
 	Message string
 	Code    int
+}
+
+// Session store
+var sessions = map[string]*Session{}
+
+type Session struct {
+    UserID    string
+    Nickname  string
+    ExpiresAt time.Time
+}
+
+// Generate a session and set cookie
+func createSession(w http.ResponseWriter, userID, nickname string) string {
+    sessionID, _ := uuid.NewV4()
+    sid := sessionID.String()
+    
+    // Create session with 24 hour expiration
+    sessions[sid] = &Session{
+        UserID:    userID,
+        Nickname:  nickname,
+        ExpiresAt: time.Now().Add(24 * time.Hour),
+    }
+    
+    // Set cookie
+    cookie := http.Cookie{
+        Name:     "session",
+        Value:    sid,
+        Path:     "/",
+        HttpOnly: true,
+        MaxAge:   86400, // 24 hours
+    }
+    
+    http.SetCookie(w, &cookie)
+    return sid
+}
+
+// Get session from cookie
+func getSession(r *http.Request) *Session {
+    cookie, err := r.Cookie("session")
+    if err != nil {
+        return nil
+    }
+    
+    session, exists := sessions[cookie.Value]
+    if !exists || session.ExpiresAt.Before(time.Now()) {
+        return nil
+    }
+    
+    return session
+}
+
+// Clear session
+func clearSession(w http.ResponseWriter, r *http.Request) {
+    cookie, err := r.Cookie("session")
+    if err == nil {
+        delete(sessions, cookie.Value)
+    }
+    
+    // Set expired cookie
+    http.SetCookie(w, &http.Cookie{
+        Name:     "session",
+        Value:    "",
+        Path:     "/",
+        HttpOnly: true,
+        MaxAge:   -1,
+    })
 }
