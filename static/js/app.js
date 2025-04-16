@@ -1,20 +1,5 @@
+// Save this as js/app.js
 import { Router } from "./router.js";
-
-import {
-  collectSignupFormData,
-  validateSignupData,
-  submitSignupForm,
-  showMessage as showSignupMessage,
-} from "./signup.js";
-
-import {
-  collectLoginFormData,
-  validateLoginData,
-  submitLoginForm,
-  showMessage as showLoginMessage,
-} from "./login.js";
-
-import { updateNavigation } from "./auth.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const router = new Router();
@@ -24,22 +9,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Auth routes
   router.addRoute("signup", "signupTemplate", () => {
-    setupSignupFormHandler(router);
+    setupSignupForm();
   });
 
   router.addRoute("login", "loginTemplate", () => {
-    setupLoginFormHandler(router);
+    setupLoginForm();
   });
-
-  // Initialize navigation based on auth state
-  updateNavigation(router);
 
   router.start();
 });
 
-// Setup the handlers for signup form
-async function setupSignupFormHandler(router) {
-  const form = document.querySelector("#signup form");
+function setupSignupForm() {
+  console.log("Setting up signup form");
+  const form = document.querySelector("#form");
+
   if (!form) {
     console.error("Signup form not found");
     return;
@@ -47,50 +30,55 @@ async function setupSignupFormHandler(router) {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    console.log("Form submitted"); // Debug log
+    console.log("Form submitted");
 
-    // Collect form data
-    const formData = collectSignupFormData();
-    console.log("Collected form data:", formData); // Debug log
+    // Create FormData object directly from form
+    const formData = new FormData(form);
 
-    // Validate form data
-    const validationError = validateSignupData(formData);
-    console.log("Validation error:", validationError); // Debug log
-
-    if (validationError) {
-      showSignupMessage(validationError);
-      return;
+    // Log all form fields (except password)
+    console.log("Form data collected:");
+    for (const [name, value] of formData.entries()) {
+      if (name !== "password" && name !== "confirmPassword") {
+        console.log(`  ${name}: ${value}`);
+      } else {
+        console.log(`  ${name}: [HIDDEN]`);
+      }
     }
 
     try {
-      console.log("Attempting to submit form"); // Debug log
-      const response = await submitSignupForm(formData);
-      console.log("Response status:", response.status); // Debug log
+      const response = await fetch("/signup", {
+        method: "POST",
+        body: formData,
+      });
 
       const result = await response.text();
-      console.log("Response text:", result); // Debug log
+      console.log("Server response:", result);
 
-      if (!response.ok) {
-        throw new Error(result || "Signup failed");
+      if (response.ok) {
+        showMessage("Signup successful! Redirecting to login...", false);
+
+        // Redirect to login after successful signup
+        setTimeout(() => {
+          window.location.hash = "#login";
+        }, 2000);
+      } else {
+        showMessage(result || "Signup failed", true);
       }
-
-      showSignupMessage("Signup successful!", false);
-
-      // Navigate to login page after success
-      setTimeout(() => {
-        router.navigateTo("login");
-      }, 1500);
     } catch (error) {
-      console.error("Error during signup:", error); // Debug log
-      showSignupMessage(error.message);
+      console.error("Error during signup:", error);
+      showMessage("An error occurred. Please try again.", true);
     }
   });
 }
 
-// Setup the handlers for login form
-function setupLoginFormHandler(router) {
+function setupLoginForm() {
+  console.log("Setting up login form");
   const form = document.querySelector("#login form");
-  if (!form) return;
+
+  if (!form) {
+    console.error("Login form not found");
+    return;
+  }
 
   // Handle login type toggle
   const nicknameRadio = form.querySelector("#nicknameRadio");
@@ -116,13 +104,80 @@ function setupLoginFormHandler(router) {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    console.log("Login form submitted");
 
-    const formData = collectLoginFormData();
-    const validationError = validateLoginData(formData);
+    const formData = new FormData(form);
 
-    if (validationError) {
-      showLoginMessage(validationError);
-      return;
+    try {
+      const response = await fetch("/login", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.text();
+
+      if (response.ok) {
+        showMessage("Login successful! Redirecting...", false);
+
+        // Redirect to posts page after successful login
+        setTimeout(() => {
+          window.location.hash = "#posts";
+        }, 1500);
+      } else {
+        showMessage(result || "Login failed", true);
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+      showMessage("An error occurred. Please try again.", true);
     }
   });
+}
+
+function showMessage(message, isError = true) {
+  // Remove any existing message
+  const existingMsg = document.querySelector(".message");
+  if (existingMsg) existingMsg.remove();
+
+  // Create message element
+  const msgElement = document.createElement("div");
+  msgElement.className = `message ${isError ? "error" : "success"}`;
+  msgElement.textContent = message;
+
+  // Style the message
+  msgElement.style.padding = "10px";
+  msgElement.style.margin = "10px 0";
+  msgElement.style.borderRadius = "5px";
+
+  if (isError) {
+    msgElement.style.backgroundColor = "#ffdddd";
+    msgElement.style.color = "#ff0000";
+    msgElement.style.border = "1px solid #ff0000";
+  } else {
+    msgElement.style.backgroundColor = "#ddffdd";
+    msgElement.style.color = "#008800";
+    msgElement.style.border = "1px solid #008800";
+  }
+
+  // Add to the appropriate form
+  const currentPage = window.location.hash.substring(1);
+  if (currentPage === "signup") {
+    const form = document.getElementById("form");
+    if (form)
+      form
+        .querySelector('button[type="submit"]')
+        .insertAdjacentElement("beforebegin", msgElement);
+  } else if (currentPage === "login") {
+    const form = document.querySelector("#login form");
+    if (form)
+      form
+        .querySelector('button[type="submit"]')
+        .insertAdjacentElement("beforebegin", msgElement);
+  }
+
+  // Auto dismiss success messages
+  if (!isError) {
+    setTimeout(() => {
+      msgElement.remove();
+    }, 5000);
+  }
 }

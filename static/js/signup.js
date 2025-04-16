@@ -1,136 +1,86 @@
-// Updated signup.js
+document.addEventListener("DOMContentLoaded", function () {
+  const router = new Router();
 
-// Function to collect form data
-export function collectSignupFormData() {
-  const firstname = document.getElementById("firstname").value.trim();
-  const lastname = document.getElementById("lastname").value.trim();
-  const nickname = document.getElementById("nickname").value.trim();
-  const age = document.getElementById("age").value.trim();
-  const gender = document.querySelector("input[name='gender']:checked")?.value;
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-  const confirmPassword = document.getElementById("confirmPassword").value;
+  // Add a route handler for the signup page
+  router.addRoute("signup", "signupTemplate", setupSignupForm);
 
-  return {
-    firstname,
-    lastname,
-    nickname,
-    age,
-    gender,
-    email,
-    password,
-    confirmPassword,
-  };
-}
+  router.start();
+});
 
-// Function to validate the form data
-export function validateSignupData(formData) {
-  const {
-    firstname,
-    lastname,
-    nickname,
-    age,
-    gender,
-    email,
-    password,
-    confirmPassword,
-  } = formData;
-
-  // Check if any field is empty
-  if (
-    !firstname ||
-    !lastname ||
-    !nickname ||
-    !age ||
-    !gender ||
-    !email ||
-    !password ||
-    !confirmPassword
-  ) {
-    return "All fields are required.";
-  }
-
-  if (nickname.length < 3 || nickname.length > 16)
-    return "Nickname must be between 3 and 16 characters.";
-  if (!/^[\w\-]+$/.test(nickname))
-    return "Nickname must contain only letters, numbers, hyphens, or underscores.";
-
-  const ageNum = parseInt(age);
-  if (isNaN(ageNum) || ageNum < 13 || ageNum > 100)
-    return "Age must be between 13 and 100.";
-
-  if (!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email))
-    return "Please enter a valid email address.";
-
-  if (password.length < 8)
-    return "Password must be at least 8 characters long.";
-  if (password.toLowerCase() === "password")
-    return "Password cannot be 'password'.";
-
-  if (password !== confirmPassword) return "Passwords do not match.";
-
-  return null; // return null if validation passes
-}
-
-// Function to submit the form data via fetch
-export function submitSignupForm(formData) {
-  // Create FormData object explicitly
-  const formDataObj = new FormData();
-
-  // Add each field to FormData
-  Object.keys(formData).forEach((key) => {
-    formDataObj.append(key, formData[key]);
-  });
-
-  console.log("Submitting form data:", formData); // Debug log
-
-  return fetch("/signup", {
-    method: "POST",
-    body: formDataObj,
-    credentials: "include",
-  });
-}
-
-// Show validation error message
-export function showMessage(message, isError = true) {
-  console.log("Showing message:", message, "isError:", isError); // Debug log
-
-  // Clear any existing message
+function showMessage(message, isError = true) {
+  // Remove any existing message
   const existingMsg = document.querySelector(".message");
-  if (existingMsg) {
-    existingMsg.remove();
-  }
+  if (existingMsg) existingMsg.remove();
 
-  // Create a message element
-  const messageEl = document.createElement("div");
-  messageEl.className = `message ${isError ? "error" : "success"}`;
-  messageEl.textContent = message;
+  // Create message element
+  const msgElement = document.createElement("div");
+  msgElement.className = `message ${isError ? "error" : "success"}`;
+  msgElement.textContent = message;
 
   // Style the message
-  messageEl.style.padding = "10px";
-  messageEl.style.borderRadius = "4px";
-  messageEl.style.margin = "10px 0";
-  messageEl.style.fontSize = "14px";
+  msgElement.style.padding = "10px";
+  msgElement.style.margin = "10px 0";
+  msgElement.style.borderRadius = "5px";
 
   if (isError) {
-    messageEl.style.backgroundColor = "#fef2f2";
-    messageEl.style.color = "#ef4444";
-    messageEl.style.border = "1px solid #fca5a5";
+    msgElement.style.backgroundColor = "#ffdddd";
+    msgElement.style.color = "#ff0000";
   } else {
-    messageEl.style.backgroundColor = "#ecfdf5";
-    messageEl.style.color = "#10b981";
-    messageEl.style.border = "1px solid #6ee7b7";
+    msgElement.style.backgroundColor = "#ddffdd";
+    msgElement.style.color = "#008800";
   }
 
-  // Insert before the submit button
-  const form = document.querySelector("#signup form");
-  const submitBtn = form.querySelector('button[type="submit"]');
-  form.insertBefore(messageEl, submitBtn);
+  // Add to form
+  const form = document.getElementById("form");
+  form
+    .querySelector('button[type="submit"]')
+    .insertAdjacentElement("beforebegin", msgElement);
 
-  // Clear message after 5 seconds if success
+  // Auto dismiss success messages
   if (!isError) {
     setTimeout(() => {
-      messageEl.remove();
+      msgElement.remove();
     }, 5000);
+  }
+}
+
+// Router class for handling navigation
+class Router {
+  constructor() {
+    this.routes = {};
+    this.main = document.querySelector("main");
+  }
+
+  addRoute(path, templateId, callback) {
+    this.routes[path] = { templateId, callback };
+  }
+
+  navigateTo(path) {
+    history.pushState(null, null, `#${path}`);
+    this.loadRoute();
+  }
+
+  loadRoute() {
+    let path = window.location.hash.substring(1) || "/";
+    const route = this.routes[path];
+
+    if (route) {
+      const template = document.getElementById(route.templateId);
+      this.main.innerHTML = "";
+      this.main.appendChild(document.importNode(template.content, true));
+
+      if (route.callback) {
+        route.callback();
+      }
+    }
+  }
+
+  start() {
+    window.addEventListener("hashchange", () => this.loadRoute());
+    if (!window.location.hash) {
+      window.location.hash = "#/";
+    } else {
+      this.loadRoute();
+    }
   }
 }

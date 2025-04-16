@@ -1,95 +1,90 @@
-// Function to collect login form data
+// Save this as js/login.js
 export function collectLoginFormData() {
   const loginType = document.querySelector(
-    "input[name='loginType']:checked"
-  ).value;
-  const loginValue =
-    loginType === "nickname"
-      ? document.getElementById("nickname").value
-      : document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+    'input[name="loginType"]:checked'
+  )?.value;
+  const nickname = document.getElementById("nickname")?.value?.trim();
+  const email = document.getElementById("email")?.value?.trim();
+  const password = document.getElementById("password")?.value;
 
-  return { loginType, loginValue, password };
+  return {
+    loginType,
+    nickname: loginType === "nickname" ? nickname : "",
+    email: loginType === "email" ? email : "",
+    password,
+  };
 }
 
-// Function to validate login form data
 export function validateLoginData(formData) {
-  const { loginType, loginValue, password } = formData;
+  const { loginType, nickname, email, password } = formData;
 
-  if (loginValue.trim() === "") return `${loginType} is required.`;
-  if (loginType === "nickname" && loginValue.length < 3)
-    return "Nickname must be at least 3 characters long.";
-  if (
-    loginType === "email" &&
-    !/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(loginValue)
-  ) {
-    return "Please enter a valid email address.";
+  if (!loginType) {
+    return "Please select a login method (nickname or email)";
   }
 
-  if (password.trim() === "") return "Password is required.";
-  if (password.length <= 7)
-    return "Password must be at least 8 characters long.";
-  if (password.toLowerCase() === "password")
-    return "Password cannot be 'password'.";
+  if (loginType === "nickname" && !nickname) {
+    return "Nickname is required";
+  }
 
-  return null; // Return null if validation passes
+  if (loginType === "email" && !email) {
+    return "Email is required";
+  }
+
+  if (!password) {
+    return "Password is required";
+  }
+
+  return null; // Validation passed
 }
 
-// Function to submit the login form
 export function submitLoginForm(formData) {
-  const formDataObject = new FormData();
-  Object.keys(formData).forEach((key) =>
-    formDataObject.append(key, formData[key])
-  );
+  // Create FormData object
+  const form = new FormData();
+
+  form.append("loginType", formData.loginType);
+  form.append("nickname", formData.nickname);
+  form.append("email", formData.email);
+  form.append("password", formData.password);
 
   return fetch("/login", {
     method: "POST",
-    credentials: "include",
-    body: formDataObject,
+    body: form,
   });
 }
 
-// Show validation error message
 export function showMessage(message, isError = true) {
-  // Check if message element exists, if not, create it
-  let messageEl = document.querySelector("#login .message");
+  // Remove any existing message
+  const existingMsg = document.querySelector(".message");
+  if (existingMsg) existingMsg.remove();
 
-  if (!messageEl) {
-    messageEl = document.createElement("div");
-    messageEl.className = "message";
-    const form = document.querySelector("#login form");
-    form.insertBefore(messageEl, form.querySelector('button[type="submit"]'));
+  // Create message element
+  const msgElement = document.createElement("div");
+  msgElement.className = `message ${isError ? "error" : "success"}`;
+  msgElement.textContent = message;
+
+  // Style the message
+  msgElement.style.padding = "10px";
+  msgElement.style.margin = "10px 0";
+  msgElement.style.borderRadius = "5px";
+
+  if (isError) {
+    msgElement.style.backgroundColor = "#ffdddd";
+    msgElement.style.color = "#ff0000";
+  } else {
+    msgElement.style.backgroundColor = "#ddffdd";
+    msgElement.style.color = "#008800";
   }
 
-  messageEl.textContent = message;
-  messageEl.className = `message ${isError ? "error" : "success"}`;
+  // Add to login form
+  const form = document.querySelector("#login form");
+  form
+    .querySelector('button[type="submit"]')
+    .insertAdjacentElement("beforebegin", msgElement);
 
-  // Add CSS if not already in stylesheet
-  const style = document.createElement("style");
-  style.textContent = `
-    .message {
-      padding: 10px;
-      border-radius: 4px;
-      margin: 10px 0;
-      font-size: 14px;
-    }
-    .message.error {
-      background-color: #fef2f2;
-      color: #ef4444;
-      border: 1px solid #fca5a5;
-    }
-    .message.success {
-      background-color: #ecfdf5;
-      color: #10b981;
-      border: 1px solid #6ee7b7;
-    }
-  `;
-  document.head.appendChild(style);
-
-  // Clear message after 5 seconds if success
+  // Auto dismiss success messages
   if (!isError) {
     setTimeout(() => {
-      messageEl.remove();
+      msgElement.remove();
     }, 5000);
   }
 }
