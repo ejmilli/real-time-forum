@@ -5,26 +5,26 @@ import (
 	"fmt"
 	"net/http"
 
+	"log"
+	"real-time-forum/db"
 	"real-time-forum/handlers"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
-	db, err := sql.Open("sqlite3", "./users.db")
+	dbConn, err := sql.Open("sqlite3", "./yourdb.sqlite")
 	if err != nil {
-		panic("Failed to open database: " + err.Error())
+		log.Fatal(err)
 	}
-	defer db.Close()
+	defer dbConn.Close()
 
-	if err := handlers.CreateUsersTable(db); err != nil {
-		panic("Failed to create table: " + err.Error())
-	}
+	db.InitializeSchema(dbConn)
 
 	fs := http.FileServer(http.Dir("./"))
 	http.Handle("/", fs)
 
-	http.HandleFunc("/signup", handlers.SignupHandler(db))
+	http.HandleFunc("/signup", handlers.SignupHandler(dbConn))
 
 	fmt.Println("Server running on :8080")
 	http.ListenAndServe(":8080", nil)
