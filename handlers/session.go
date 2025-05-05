@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"net/http"
 	"time"
 
@@ -13,16 +14,20 @@ type Session struct {
 	ExpiresAt time.Time
 }
 
-var sessions = map[string]*Session{}
 
-func CreateSession(w http.ResponseWriter, userID, nickname string) string {
+
+func CreateSession(db *sql.DB, w http.ResponseWriter, userID, nickname string) (string, error) {
 	sessionID, _ := uuid.NewV4()
 	sid := sessionID.String()
+	expiresAt := time.Now().Add(24 * time.Hour)
 
-	sessions[sid] = &Session{
-		UserID:    userID,
-		Nickname:  nickname,
-		ExpiresAt: time.Now().Add(24 * time.Hour),
+	_, err := db.Exec(`
+		INSERT INTO sessions (id, user_id, nickname, expires_at)
+		VALUES (?, ?, ?, ?)`,
+		sid, userID, nickname, expiresAt,
+	)
+	if err != nil {
+		return "", err
 	}
 
 	http.SetCookie(w, &http.Cookie{
@@ -32,26 +37,38 @@ func CreateSession(w http.ResponseWriter, userID, nickname string) string {
 		HttpOnly: true,
 		MaxAge:   86400,
 	})
-	return sid
+
+	return sid, nil
 }
 
-func GetSession(r *http.Request) *Session {
+
+
+func GetSession(db *sql.DB, r *http.Request) *Session {
 	cookie, err := r.Cookie("session")
 	if err != nil {
 		return nil
 	}
-	session, exists := sessions[cookie.Value]
-	if !exists || session.ExpiresAt.Before(time.Now()) {
+
+	var sess Session
+	err = db.QueryRow(`
+		SELECT user_id, nickname, expires_at FROM sessions WHERE id = ?`,
+		cookie.Value,
+	).Scan(&sess.UserID, &sess.Nickname, &sess.ExpiresAt)
+
+	if err != nil || sess.ExpiresAt.Before(time.Now()) {
 		return nil
 	}
-	return session
+
+	return &sess
 }
 
-func ClearSession(w http.ResponseWriter, r *http.Request) {
+
+func ClearSession(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session")
 	if err == nil {
-		delete(sessions, cookie.Value)
+		db.Exec(`DELETE FROM sessions WHERE id = ?`, cookie.Value)
 	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session",
 		Value:    "",

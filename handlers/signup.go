@@ -155,18 +155,4 @@ func createUser(db *sql.DB, user *User) error {
 	return err
 }
 
-func CreateUsersTable(db *sql.DB) error {
-	query := `
-	CREATE TABLE IF NOT EXISTS users (
-		id TEXT PRIMARY KEY,
-		first_name TEXT NOT NULL,
-		last_name TEXT NOT NULL,
-		nickname TEXT NOT NULL UNIQUE,
-		age INTEGER NOT NULL,
-		gender TEXT NOT NULL,
-		email TEXT NOT NULL UNIQUE,
-		password_hash TEXT NOT NULL
-	)`
-	_, err := db.Exec(query)
-	return err
-}
+
