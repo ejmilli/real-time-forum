@@ -25,6 +25,7 @@ func main() {
 	http.Handle("/", fs)
 
 	http.HandleFunc("/signup", handlers.SignupHandler(dbConn))
+	http.HandleFunc("/login", handlers.LoginHandler(dbConn))
 
 	fmt.Println("Server running on :8080")
 	http.ListenAndServe(":8080", nil)
