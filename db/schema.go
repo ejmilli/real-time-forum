@@ -28,6 +28,31 @@ func InitializeSchema(db *sql.DB) {
 		FOREIGN KEY(user_id) REFERENCES users(id)
 	);`
 
+	createPostsTable := `
+	  CREATE TABLE IF NOT EXISTS posts (
+		  id Text PRIMARY KEY, 
+			user_id TEXT NOT NULL, 
+			title TEXT NOT NULL, 
+			body TEXT NOT NULL, 
+			likes INTEGER DEFAULT 0, 
+		  dislikes INTEGER DEFAULT 0, 
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY(user_id) REFERENCES users(id)
+		)
+	`
+
+	createCommentsTable := `
+	  CREATE TABLE IF NOT EXISTS comments (
+		   id TEXT PRIMARY KEY,
+    post_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    body TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(post_id) REFERENCES posts(id),
+    FOREIGN KEY(user_id) REFERENCES users(id)
+		)
+	`
+
 	_, err := db.Exec(createUsersTable)
 	if err != nil {
 		log.Fatalf("error creating users table: %v", err)
@@ -38,5 +63,14 @@ func InitializeSchema(db *sql.DB) {
 		log.Fatalf("error creating sessions table: %v", err)
 	}
 
+	_, err = db.Exec(createPostsTable) 
+	if err != nil {
+		log.Fatalf("error creating posts table: %v", err)
+	}
+
+	_, err = db.Exec(createCommentsTable) 
+	if err != nil {
+		log.Fatalf("error creating comments table: %v", err)
+	}
 	log.Println("✅ Database schema initialized successfully.")
 }
