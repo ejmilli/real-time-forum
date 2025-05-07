@@ -1,4 +1,4 @@
-// Save this as js/app.js
+// Updated app.js
 import { Router } from "./router.js";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -14,6 +14,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   router.addRoute("login", "loginTemplate", () => {
     setupLoginForm();
+  });
+  
+  // Posts route
+  router.addRoute("posts", "postsTemplate", () => {
+    // Setup for posts page if needed
   });
 
   router.start();
@@ -39,9 +44,9 @@ function setupSignupForm() {
     console.log("Form data collected:");
     for (const [name, value] of formData.entries()) {
       if (name !== "password" && name !== "confirmPassword") {
-        console.log(`  ${name}: ${value}`);
+        console.log(` ${name}: ${value}`);
       } else {
-        console.log(`  ${name}: [HIDDEN]`);
+        console.log(` ${name}: [HIDDEN]`);
       }
     }
 
@@ -87,6 +92,10 @@ function setupLoginForm() {
   const emailInput = form.querySelector("#emailInput");
 
   if (nicknameRadio && emailRadio) {
+    // Set default selection
+    nicknameRadio.checked = true;
+    emailInput.style.display = "none";
+    
     nicknameRadio.addEventListener("change", () => {
       nicknameInput.style.display = "block";
       emailInput.style.display = "none";
@@ -96,29 +105,54 @@ function setupLoginForm() {
       nicknameInput.style.display = "none";
       emailInput.style.display = "block";
     });
-
-    // Set default
-    nicknameRadio.checked = true;
-    emailInput.style.display = "none";
   }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     console.log("Login form submitted");
 
-    const formData = new FormData(form);
+    // Get form data manually to ensure correct values
+    const loginType = form.querySelector('input[name="loginType"]:checked').value;
+    const nickname = loginType === "nickname" ? form.querySelector('#nickname').value.trim() : "";
+    const email = loginType === "email" ? form.querySelector('#email').value.trim() : "";
+    const password = form.querySelector('#password').value;
+
+    // Validation
+    if (loginType === "nickname" && !nickname) {
+      showMessage("Nickname is required", true);
+      return;
+    }
+    
+    if (loginType === "email" && !email) {
+      showMessage("Email is required", true);
+      return;
+    }
+    
+    if (!password) {
+      showMessage("Password is required", true);
+      return;
+    }
+
+    // The server expects form URL encoded data, not FormData
+    const formData = new URLSearchParams();
+    formData.append("loginType", loginType);
+    formData.append("nickname", nickname);
+    formData.append("email", email);
+    formData.append("password", password);
 
     try {
       const response = await fetch("/login", {
         method: "POST",
-        body: formData,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString()
       });
 
       const result = await response.text();
 
       if (response.ok) {
         showMessage("Login successful! Redirecting...", false);
-
         // Redirect to posts page after successful login
         setTimeout(() => {
           window.location.hash = "#posts";
@@ -179,5 +213,48 @@ function showMessage(message, isError = true) {
     setTimeout(() => {
       msgElement.remove();
     }, 5000);
+  }
+}
+
+// Auth functions
+export function isAuthenticated() {
+  // We'll check with the server if the session is valid
+  return fetch("/api/check-auth", {
+    credentials: "include",
+  })
+    .then((response) => response.ok)
+    .catch(() => false);
+}
+
+export function logout() {
+  return fetch("/api/logout", {
+    method: "POST",
+    credentials: "include",
+  });
+}
+
+export async function updateNavigation(router) {
+  const nav = document.querySelector("nav");
+  const isLoggedIn = await isAuthenticated();
+
+  if (isLoggedIn) {
+    nav.innerHTML = `
+      <a href="#posts" data-page="posts">Posts</a>
+      <a href="#profile" data-page="profile">Profile</a>
+      <button id="logoutBtn">Logout</button>
+    `;
+
+    // Add logout handler
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await logout();
+      router.navigateTo("/");
+      updateNavigation(router);
+    });
+  } else {
+    nav.innerHTML = `
+      <a href="#/" data-page="/">Home</a>
+      <a href="#signup" data-page="signup">Sign Up</a>
+      <a href="#login" data-page="login">Login</a>
+    `;
   }
 }

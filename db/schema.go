@@ -63,12 +63,12 @@ func InitializeSchema(db *sql.DB) {
 		log.Fatalf("error creating sessions table: %v", err)
 	}
 
-	_, err = db.Exec(createPostsTable) 
+	_, err = db.Exec(createPostsTable)
 	if err != nil {
 		log.Fatalf("error creating posts table: %v", err)
 	}
 
-	_, err = db.Exec(createCommentsTable) 
+	_, err = db.Exec(createCommentsTable)
 	if err != nil {
 		log.Fatalf("error creating comments table: %v", err)
 	}
