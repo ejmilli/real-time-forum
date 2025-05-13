@@ -104,66 +104,67 @@
     </template>
 
     <!-- Login Section -->
-    <template id="loginTemplate">
-      <section id="login">
-        <div class="image-section">
-          <div class="shape-1"></div>
-          <div class="shape-2"></div>
-          <div class="image-content">
-            <h1>Welcome Back!</h1>
-            <p>
-              Log in to your account to continue your journey with us. We're
-              excited to show you what's new!
-            </p>
+    <!-- Login Section -->
+<template id="loginTemplate">
+  <section id="login">
+    <div class="image-section">
+      <div class="shape-1"></div>
+      <div class="shape-2"></div>
+      <div class="image-content">
+        <h1>Welcome Back!</h1>
+        <p>
+          Log in to your account to continue your journey with us. We're
+          excited to show you what's new!
+        </p>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-container">
+        <form id="loginForm">
+          <h2>Login</h2>
+          <div class="input-group">
+            <label for="nicknameRadio">Nickname</label>
+            <input
+              type="radio"
+              name="loginType"
+              value="nickname"
+              id="nicknameRadio"
+              required
+            />
+            <label for="emailRadio">Email</label>
+            <input
+              type="radio"
+              name="loginType"
+              value="email"
+              id="emailRadio"
+              required
+            />
           </div>
-        </div>
-        <div class="form-section">
-          <div class="form-container">
-            <form>
-              <h2>Login</h2>
-              <div class="input-group">
-                <label for="nicknameRadio">Nickname</label>
-                <input
-                  type="radio"
-                  name="loginType"
-                  value="nickname"
-                  id="nicknameRadio"
-                  required
-                />
-                <label for="emailRadio">Email</label>
-                <input
-                  type="radio"
-                  name="loginType"
-                  value="email"
-                  id="emailRadio"
-                  required
-                />
-              </div>
 
-              <div id="nicknameInput" class="input-group">
-                <label for="nickname">Enter your Nickname</label>
-                <input type="text" id="nickname" name="nickname" />
-              </div>
-
-              <div id="emailInput" class="input-group">
-                <label for="email">Enter your Email</label>
-                <input type="email" id="email" name="email" />
-              </div>
-
-              <div class="input-group">
-                <label for="password">Password</label>
-                <input type="password" name="password" id="password" required />
-              </div>
-              <p>
-                Don't have an account?
-                <a href="#signup" data-page="signup">SignUp</a>
-              </p>
-              <button class="btn" type="submit">Login</button>
-            </form>
+          <div id="nicknameInput" class="input-group">
+            <label for="nickname">Enter your Nickname</label>
+            <input type="text" id="nickname" name="nickname" />
           </div>
-        </div>
-      </section>
-    </template>
+
+          <div id="emailInput" class="input-group">
+            <label for="email">Enter your Email</label>
+            <input type="email" id="email" name="email" />
+          </div>
+
+          <div class="input-group">
+            <label for="password">Password</label>
+            <input type="password" name="password" id="password" required />
+          </div>
+          <p>
+            Don't have an account?
+            <a href="#signup" data-page="signup">SignUp</a>
+          </p>
+          <button class="btn" type="submit">Login</button>
+        </form>
+      </div>
+    </div>
+  </section>
+</template>
 
     <!--Home Page-->
 
