@@ -30,18 +30,17 @@ func InitializeSchema(db *sql.DB) {
 	);`
 
 	createPostsTable := `
-	CREATE TABLE IF NOT EXISTS posts (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    category_id TEXT NOT NULL DEFAULT 'general',
-    title TEXT NOT NULL,
-    content TEXT NOT NULL,
-    likes INTEGER DEFAULT 0,
-    dislikes INTEGER DEFAULT 0,
-    created_at DATETIME NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-		
-);`
+	  CREATE TABLE IF NOT EXISTS posts (
+		  id Text PRIMARY KEY, 
+			user_id TEXT NOT NULL, 
+			title TEXT NOT NULL, 
+			body TEXT NOT NULL, 
+			likes INTEGER DEFAULT 0, 
+		  dislikes INTEGER DEFAULT 0, 
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY(user_id) REFERENCES users(id)
+		)
+	`
 
 	createCommentsTable := `
 	CREATE TABLE IF NOT EXISTS comments (

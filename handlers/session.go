@@ -9,7 +9,9 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-// CreateSession inserts a new session and sets a cookie
+
+
+
 func CreateSession(db *sql.DB, w http.ResponseWriter, userID, nickname string) (string, error) {
 	sessionID, err := uuid.NewV4()
 	if err != nil {
@@ -28,8 +30,9 @@ func CreateSession(db *sql.DB, w http.ResponseWriter, userID, nickname string) (
 		return "", err
 	}
 
+	// Use consistent cookie name "session_id"
 	http.SetCookie(w, &http.Cookie{
-		Name:     "session",
+		Name:     "session_id",
 		Value:    sid,
 		Path:     "/",
 		HttpOnly: true,
@@ -39,7 +42,8 @@ func CreateSession(db *sql.DB, w http.ResponseWriter, userID, nickname string) (
 	return sid, nil
 }
 
-// GetSession retrieves the session info if valid
+
+
 func GetSession(db *sql.DB, r *http.Request) *models.Session {
 	cookie, err := r.Cookie("session")
 	if err != nil {
@@ -62,18 +66,18 @@ func GetSession(db *sql.DB, r *http.Request) *models.Session {
 		time.Now(), time.Now().Add(15*time.Minute), cookie.Value,
 	)
 
-	return &sess
+	return &models.Session{}
 }
 
-// ClearSession deletes session from DB and clears cookie
+
 func ClearSession(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session")
+	cookie, err := r.Cookie("session_id")
 	if err == nil {
 		db.Exec(`DELETE FROM sessions WHERE id = ?`, cookie.Value)
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "session",
+		Name:     "session_id",
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,

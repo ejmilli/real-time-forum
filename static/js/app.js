@@ -1,6 +1,7 @@
 // Fixed app.js with proper routing and authentication
 import { Router } from "./router.js";
 import { setupPostsPage } from "./posts.js";
+import { setupPostDetailsPage } from "./post-details.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const router = new Router();
@@ -17,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupLoginForm(router);
   });
 
-  // Posts route
+  // Posts route - FIXED: Only register once
   router.addRoute("posts", "postsTemplate", async () => {
     console.log("Posts route activated");
 
@@ -33,6 +34,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Setup posts page functionality
     setupPostsPage();
+
+    // Set up online users functionality
+    setupOnlineUsers();
+  });
+
+  // Post details route - NEW
+  router.addRoute("post/:id", "postDetailsTemplate", async (params) => {
+    console.log("Post details route activated with ID:", params.id);
+
+    // Check authentication first
+    const auth = await isAuthenticated();
+    if (!auth) {
+      console.log("User not authenticated, redirecting to login");
+      router.navigateTo("login");
+      return;
+    }
+
+    console.log("User authenticated, setting up post details page");
+
+    // Setup post details page functionality
+    setupPostDetailsPage(params.id);
 
     // Set up online users functionality
     setupOnlineUsers();

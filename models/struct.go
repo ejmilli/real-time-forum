@@ -2,6 +2,17 @@ package models
 
 import "time"
 
+type User struct {
+	ID           string
+	FirstName    string
+	LastName     string
+	Nickname     string
+	Age          int
+	Gender       string
+	Email        string
+	PasswordHash string
+}
+
 
 type Post struct {
     ID           string    `json:"id"`

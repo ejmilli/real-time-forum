@@ -1,4 +1,4 @@
-// posts.js - Updated to match your HTML template IDs
+// post-details.js - Post details page functionality
 
 // Escape HTML to prevent XSS
 function escapeHTML(str) {
@@ -16,87 +16,135 @@ function escapeHTML(str) {
 }
 
 // Show loading state
-function showLoading() {
-  const container = document.getElementById("posts-container");
-  if (container) {
-    container.innerHTML = "<p>Loading posts...</p>";
+function showPostLoading() {
+  const postContainer = document.getElementById("post-details");
+  const commentsContainer = document.getElementById("comments-container");
+
+  if (postContainer) {
+    postContainer.innerHTML = "<p>Loading post...</p>";
+  }
+
+  if (commentsContainer) {
+    commentsContainer.innerHTML = "<p>Loading comments...</p>";
   }
 }
 
 // Show error message
-function showError(message) {
-  const container = document.getElementById("posts-container");
-  if (container) {
-    container.innerHTML = `<div class="error" style="color: red; padding: 10px;">Error: ${message}</div>`;
+function showPostError(message) {
+  const postContainer = document.getElementById("post-details");
+  if (postContainer) {
+    postContainer.innerHTML = `<div class="error" style="color: red; padding: 10px;">Error: ${message}</div>`;
   }
 }
 
-// Renders posts
-function renderPosts(posts) {
-  const container = document.getElementById("posts-container");
+// Fetch and display post details with comments
+async function getPostDetails(postId) {
+  console.log("Fetching post details for ID:", postId);
+  showPostLoading();
 
-  if (!container) {
-    console.error("posts-container not found");
+  try {
+    const res = await fetch(
+      `/api/posts/details?id=${encodeURIComponent(postId)}`,
+      {
+        credentials: "include",
+      }
+    );
+
+    console.log("Post details response status:", res.status);
+
+    if (res.ok) {
+      const data = await res.json();
+      console.log("Received post data:", data);
+      renderPostDetails(data.post, data.comments);
+    } else if (res.status === 401) {
+      console.log("Unauthorized - redirecting to login");
+      showPostError("You need to be logged in to view this post.");
+      window.location.hash = "login";
+    } else if (res.status === 404) {
+      showPostError("Post not found.");
+    } else {
+      const errorText = await res.text();
+      console.error("Server error response:", errorText);
+      showPostError(`Failed to load post: ${errorText}`);
+    }
+  } catch (err) {
+    console.error("Network error:", err);
+    showPostError("Network error occurred while loading post details.");
+  }
+}
+
+// Render post details and comments
+function renderPostDetails(post, comments) {
+  const postContainer = document.getElementById("post-details");
+  const commentsContainer = document.getElementById("comments-container");
+
+  if (!postContainer || !commentsContainer) {
+    console.error("Post details containers not found");
     return;
   }
 
-  if (!posts || posts.length === 0) {
-    container.innerHTML = "<p>No posts found.</p>";
-    return;
-  }
-
-  container.innerHTML = "";
-
-  posts.forEach((post) => {
-    const postDiv = document.createElement("div");
-    postDiv.className = "post";
-    postDiv.style.cssText =
-      "border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px;";
-
-    postDiv.innerHTML = `
-      <h3><a href="#post/${
-        post.id
-      }" style="color: #007bff; text-decoration: none;">${escapeHTML(
-      post.title
-    )}</a></h3>
-      <p style="margin: 10px 0;">${escapeHTML(post.content)}</p>
-      <small style="color: #666;">
-        <span class="post-category" style="background: #e9ecef; padding: 2px 6px; border-radius: 3px;">${escapeHTML(
-          post.category_id
-        )}</span> | 
-        👍 ${post.like_count || 0} 👎 ${post.dislike_count || 0}
-        <br>
+  // Render post
+  postContainer.innerHTML = `
+    <div class="post-detail">
+      <h2>${escapeHTML(post.title)}</h2>
+      <div class="post-meta">
+        <span class="post-category" style="background: #e9ecef; padding: 2px 6px; border-radius: 3px; margin-right: 10px;">
+          ${escapeHTML(post.category_id)}
+        </span>
+        <span class="post-stats">
+          👍 ${post.like_count || 0} 👎 ${post.dislike_count || 0}
+        </span>
+      </div>
+      <div class="post-content" style="margin: 15px 0; line-height: 1.6;">
+        ${escapeHTML(post.content)}
+      </div>
+      <div class="post-footer" style="color: #666; font-size: 0.9em;">
         Posted: ${new Date(post.created_at).toLocaleString()}
-      </small>
-    `;
+      </div>
+    </div>
+  `;
 
-    container.appendChild(postDiv);
-  });
+  // Render comments
+  if (!comments || comments.length === 0) {
+    commentsContainer.innerHTML =
+      "<p>No comments yet. Be the first to comment!</p>";
+  } else {
+    commentsContainer.innerHTML = comments
+      .map(
+        (comment) => `
+        <div class="comment" style="border-left: 3px solid #007bff; padding-left: 15px; margin: 15px 0;">
+          <div class="comment-body" style="margin-bottom: 5px;">
+            ${escapeHTML(comment.body)}
+          </div>
+          <div class="comment-footer" style="color: #666; font-size: 0.8em;">
+            User: ${escapeHTML(comment.user_id)} - ${new Date(
+          comment.created_at
+        ).toLocaleString()}
+          </div>
+        </div>
+      `
+      )
+      .join("");
+  }
 }
 
-// Submit a new post
-async function submitPost() {
-  console.log("Submitting post...");
+// Submit a new comment
+async function submitComment(postId) {
+  console.log("Submitting comment for post:", postId);
 
-  const titleEl = document.getElementById("title");
-  const contentEl = document.getElementById("content");
-  const categoryEl = document.getElementById("category-select");
-  const submitBtn = document.getElementById("submit-post");
+  const commentTextEl = document.getElementById("comment-text");
+  const submitBtn = document.getElementById("submit-comment");
 
-  if (!titleEl || !contentEl || !categoryEl) {
-    console.error("Required form elements not found!");
-    alert("Form elements missing - check your HTML template");
+  if (!commentTextEl) {
+    console.error("Comment text element not found!");
+    alert("Comment form not found - check your HTML template");
     return;
   }
 
-  const title = titleEl.value.trim();
-  const content = contentEl.value.trim();
-  const category = categoryEl.value;
+  const commentText = commentTextEl.value.trim();
 
-  console.log("Form values:", { title, content, category });
-
-  if (!title || !content || !category) {
-    alert("Please fill in all fields.");
+  if (!commentText) {
+    alert("Please enter a comment.");
     return;
   }
 
@@ -106,155 +154,134 @@ async function submitPost() {
   }
 
   try {
-    console.log("Sending POST request to /api/posts");
-    const res = await fetch("/api/posts", {
+    console.log("Sending POST request to /api/comments/create");
+    const res = await fetch("/api/comments/create", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       credentials: "include",
       body: JSON.stringify({
-        title,
-        content,
-        category_id: category,
+        post_id: postId,
+        body: commentText,
       }),
     });
 
-    console.log("POST response status:", res.status);
+    console.log("Comment response status:", res.status);
 
     if (res.ok) {
-      const newPost = await res.json();
-      console.log("Post created successfully:", newPost);
+      const newComment = await res.json();
+      console.log("Comment created successfully:", newComment);
 
-      // Clear form
-      titleEl.value = "";
-      contentEl.value = "";
-      categoryEl.selectedIndex = 0;
+      // Clear comment field
+      commentTextEl.value = "";
 
-      // Refresh posts list
-      const currentCategory = getCurrentCategory();
-      console.log("Refreshing posts for category:", currentCategory);
-      await getPostsByCategory(currentCategory);
+      // Refresh post details to show new comment
+      await getPostDetails(postId);
 
-      alert("Post created successfully!");
+      // Show success message
+      const successMsg = document.createElement("div");
+      successMsg.style.cssText =
+        "background: #d4edda; color: #155724; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #c3e6cb;";
+      successMsg.textContent = "Comment posted successfully!";
+
+      const commentForm = document.querySelector(".comment-form");
+      if (commentForm) {
+        commentForm.appendChild(successMsg);
+        setTimeout(() => successMsg.remove(), 3000);
+      }
     } else {
       const errorText = await res.text();
-      console.error("Failed to create post:", errorText);
-      alert(`Failed to create post: ${errorText}`);
+      console.error("Failed to create comment:", errorText);
+      alert(`Failed to post comment: ${errorText}`);
     }
   } catch (err) {
-    console.error("Error submitting post:", err);
-    alert("An error occurred while creating the post.");
+    console.error("Error submitting comment:", err);
+    alert("An error occurred while posting the comment.");
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.textContent = "Post";
+      submitBtn.textContent = "Post Comment";
     }
   }
 }
 
-// Get currently selected category
-function getCurrentCategory() {
-  const activeCategory = document.querySelector("#category-list li.active");
-  return activeCategory ? activeCategory.getAttribute("data-category") : "all";
-}
+// Set up category filtering for post details page
+function setupCategoryFiltering() {
+  const categoryList = document.getElementById("category-list");
 
-// Set active category in sidebar
-function setActiveCategory(category) {
-  // Remove active class from all categories
-  document.querySelectorAll("#category-list li").forEach((li) => {
-    li.classList.remove("active");
+  if (!categoryList) {
+    console.error("Category list not found");
+    return;
+  }
+
+  categoryList.addEventListener("click", (e) => {
+    if (e.target.tagName === "LI" && e.target.hasAttribute("data-category")) {
+      const selectedCategory = e.target.getAttribute("data-category");
+      console.log(
+        "Category clicked from post details, navigating to posts with category:",
+        selectedCategory
+      );
+
+      // Navigate back to posts with the selected category
+      if (selectedCategory === "all") {
+        window.location.hash = "posts";
+      } else {
+        window.location.hash = `posts?category=${selectedCategory}`;
+      }
+    }
   });
-
-  // Add active class to selected category
-  const targetCategory = document.querySelector(
-    `#category-list li[data-category="${category}"]`
-  );
-  if (targetCategory) {
-    targetCategory.classList.add("active");
-  }
 }
 
-// Fetch and show posts by category
-async function getPostsByCategory(category = "all") {
-  console.log("Fetching posts for category:", category);
-  showLoading();
+// Set up back button functionality
+function setupBackButton() {
+  const backLink = document.querySelector(".back-link");
 
-  try {
-    const url =
-      category && category !== "all"
-        ? `/api/posts?category=${encodeURIComponent(category)}`
-        : "/api/posts";
-
-    console.log("Fetching from URL:", url);
-
-    const res = await fetch(url, {
-      credentials: "include",
+  if (backLink) {
+    backLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      console.log("Back button clicked, navigating to posts");
+      window.location.hash = "posts";
     });
-
-    console.log("GET response status:", res.status);
-
-    if (res.ok) {
-      const posts = await res.json();
-      console.log("Received posts:", posts);
-      renderPosts(posts);
-      setActiveCategory(category);
-    } else if (res.status === 401) {
-      console.log("Unauthorized - redirecting to login");
-      showError("You need to be logged in to view posts.");
-      window.location.hash = "login";
-    } else {
-      const errorText = await res.text();
-      console.error("Server error response:", errorText);
-      showError(`Failed to load posts: ${errorText}`);
-    }
-  } catch (err) {
-    console.error("Network error:", err);
-    showError("Network error occurred while loading posts.");
   }
 }
 
-// Set up post creation and category filtering
-export function setupPostsPage() {
-  console.log("Setting up posts page...");
+// Main setup function for post details page
+export function setupPostDetailsPage(postId) {
+  console.log("Setting up post details page for ID:", postId);
 
   // Small delay to ensure DOM is ready
   setTimeout(() => {
-    const submitBtn = document.getElementById("submit-post");
-    const categoryList = document.getElementById("category-list");
+    const submitBtn = document.getElementById("submit-comment");
 
     console.log("Elements found:", {
       submitBtn: !!submitBtn,
-      categoryList: !!categoryList,
+      postContainer: !!document.getElementById("post-details"),
+      commentsContainer: !!document.getElementById("comments-container"),
     });
 
-    // Set up post submission
+    // Set up comment submission
     if (submitBtn) {
-      submitBtn.addEventListener("click", submitPost);
-      console.log("Submit button listener added");
+      // Remove any existing listeners
+      const newSubmitBtn = submitBtn.cloneNode(true);
+      submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
+
+      newSubmitBtn.addEventListener("click", () => {
+        submitComment(postId);
+      });
+      console.log("Comment submit button listener added");
     } else {
-      console.error("submit-post button not found!");
+      console.error("submit-comment button not found!");
     }
 
     // Set up category filtering
-    if (categoryList) {
-      categoryList.addEventListener("click", (e) => {
-        if (
-          e.target.tagName === "LI" &&
-          e.target.hasAttribute("data-category")
-        ) {
-          const selectedCategory = e.target.getAttribute("data-category");
-          console.log("Category clicked:", selectedCategory);
-          getPostsByCategory(selectedCategory);
-        }
-      });
-      console.log("Category list listener added");
-    } else {
-      console.error("category-list not found!");
-    }
+    setupCategoryFiltering();
 
-    // Initial load - get all posts
-    console.log("Starting initial load");
-    getPostsByCategory("all");
+    // Set up back button
+    setupBackButton();
+
+    // Load the post details
+    console.log("Starting to load post details");
+    getPostDetails(postId);
   }, 100);
 }

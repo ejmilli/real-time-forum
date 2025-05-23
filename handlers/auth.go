@@ -11,26 +11,25 @@ import (
 // CheckAuthHandler verifies if the user's session is valid
 func CheckAuthHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Auth check request received")
+		// Get session cookie
+		cookie, err := r.Cookie("session_id")
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
 
-		session := GetSession(db, r)
-		w.Header().Set("Content-Type", "application/json")
+		sessionID := cookie.Value
+		var expiresAt time.Time
 
-		if session == nil || session.ExpiresAt.Before(time.Now()) {
-			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(map[string]interface{}{
-				"authenticated": false,
-			})
+		// Check if session exists and is valid
+		err = db.QueryRow("SELECT expires_at FROM sessions WHERE id = ?", sessionID).Scan(&expiresAt)
+		if err != nil || expiresAt.Before(time.Now()) {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		// Session is valid
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"authenticated": true,
-			"user_id":       session.UserID,
-			"nickname":      session.Nickname,
-		})
 	}
 }
 
@@ -84,5 +83,17 @@ func UpdateLastActive(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 				log.Printf("Last active update error: %v", err)
 			}
 		}
+
+		// Clear cookie regardless of whether we found one
+		expiredCookie := http.Cookie{
+			Name:     "session_id",
+			Value:    "",
+			Path:     "/",
+			Expires:  time.Unix(0, 0),
+			HttpOnly: true,
+		}
+		http.SetCookie(w, &expiredCookie)
+
+		w.WriteHeader(http.StatusOK)
 	}
 }
