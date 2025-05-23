@@ -1,28 +1,86 @@
-// Updated app.js
+// Updated app.js - Integrated with Posts, Router, and Auth
 import { Router } from "./router.js";
+import { isAuthenticated, logout } from "./auth.js";
+
+let router;
+let postsManager;
 
 document.addEventListener("DOMContentLoaded", () => {
-  const router = new Router();
+  router = new Router();
+
+  // Initialize the posts manager
+  postsManager = new PostsManager(router);
 
   // Home route (landing page)
-  router.addRoute("/", "homeTemplate");
+  router.addRoute("/", "homeTemplate", () => {
+    updateNavigation();
+  });
 
   // Auth routes
   router.addRoute("signup", "signupTemplate", () => {
     setupSignupForm();
+    updateNavigation();
   });
 
   router.addRoute("login", "loginTemplate", () => {
     setupLoginForm();
+    updateNavigation();
   });
-  
-  // Posts route
-  router.addRoute("posts", "postsTemplate", () => {
-    // Setup for posts page if needed
+
+  // Posts routes - these will be handled by PostsManager
+  router.addRoute("posts", "postsTemplate", async () => {
+    if (await checkAuthAndRedirect()) {
+      await postsManager.renderPostsList();
+      updateNavigation();
+    }
+  });
+
+  router.addRoute("posts/create", "postsTemplate", async () => {
+    if (await checkAuthAndRedirect()) {
+      await postsManager.renderCreatePost();
+      updateNavigation();
+    }
+  });
+
+  router.addRoute(
+    "posts/category/:category",
+    "postsTemplate",
+    async (params) => {
+      if (await checkAuthAndRedirect()) {
+        await postsManager.renderPostsList(params.category);
+        updateNavigation();
+      }
+    }
+  );
+
+  router.addRoute("posts/view/:id", "postsTemplate", async (params) => {
+    if (await checkAuthAndRedirect()) {
+      await postsManager.renderPostView(params.id);
+      updateNavigation();
+    }
+  });
+
+  // Profile route (placeholder)
+  router.addRoute("profile", "profileTemplate", async () => {
+    if (await checkAuthAndRedirect()) {
+      updateNavigation();
+    }
   });
 
   router.start();
+  updateNavigation();
 });
+
+// Check if user is authenticated, redirect to login if not
+async function checkAuthAndRedirect() {
+  const authenticated = await isAuthenticated();
+  if (!authenticated) {
+    router.navigateTo("login");
+    showMessage("Please log in to access this page", true);
+    return false;
+  }
+  return true;
+}
 
 function setupSignupForm() {
   console.log("Setting up signup form");
@@ -37,10 +95,8 @@ function setupSignupForm() {
     e.preventDefault();
     console.log("Form submitted");
 
-    // Create FormData object directly from form
     const formData = new FormData(form);
 
-    // Log all form fields (except password)
     console.log("Form data collected:");
     for (const [name, value] of formData.entries()) {
       if (name !== "password" && name !== "confirmPassword") {
@@ -61,10 +117,8 @@ function setupSignupForm() {
 
       if (response.ok) {
         showMessage("Signup successful! Redirecting to login...", false);
-
-        // Redirect to login after successful signup
         setTimeout(() => {
-          window.location.hash = "#login";
+          router.navigateTo("login");
         }, 2000);
       } else {
         showMessage(result || "Signup failed", true);
@@ -92,10 +146,9 @@ function setupLoginForm() {
   const emailInput = form.querySelector("#emailInput");
 
   if (nicknameRadio && emailRadio) {
-    // Set default selection
     nicknameRadio.checked = true;
     emailInput.style.display = "none";
-    
+
     nicknameRadio.addEventListener("change", () => {
       nicknameInput.style.display = "block";
       emailInput.style.display = "none";
@@ -111,29 +164,33 @@ function setupLoginForm() {
     e.preventDefault();
     console.log("Login form submitted");
 
-    // Get form data manually to ensure correct values
-    const loginType = form.querySelector('input[name="loginType"]:checked').value;
-    const nickname = loginType === "nickname" ? form.querySelector('#nickname').value.trim() : "";
-    const email = loginType === "email" ? form.querySelector('#email').value.trim() : "";
-    const password = form.querySelector('#password').value;
+    const loginType = form.querySelector(
+      'input[name="loginType"]:checked'
+    ).value;
+    const nickname =
+      loginType === "nickname"
+        ? form.querySelector("#nickname").value.trim()
+        : "";
+    const email =
+      loginType === "email" ? form.querySelector("#email").value.trim() : "";
+    const password = form.querySelector("#password").value;
 
     // Validation
     if (loginType === "nickname" && !nickname) {
       showMessage("Nickname is required", true);
       return;
     }
-    
+
     if (loginType === "email" && !email) {
       showMessage("Email is required", true);
       return;
     }
-    
+
     if (!password) {
       showMessage("Password is required", true);
       return;
     }
 
-    // The server expects form URL encoded data, not FormData
     const formData = new URLSearchParams();
     formData.append("loginType", loginType);
     formData.append("nickname", nickname);
@@ -144,18 +201,19 @@ function setupLoginForm() {
       const response = await fetch("/login", {
         method: "POST",
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: formData.toString()
+        body: formData.toString(),
       });
 
       const result = await response.text();
 
       if (response.ok) {
         showMessage("Login successful! Redirecting...", false);
-        // Redirect to posts page after successful login
+        // Update navigation after successful login
+        await updateNavigation();
         setTimeout(() => {
-          window.location.hash = "#posts";
+          router.navigateTo("posts");
         }, 1500);
       } else {
         showMessage(result || "Login failed", true);
@@ -165,6 +223,39 @@ function setupLoginForm() {
       showMessage("An error occurred. Please try again.", true);
     }
   });
+}
+
+async function updateNavigation() {
+  const nav = document.querySelector("nav");
+  const authenticated = await isAuthenticated();
+
+  if (authenticated) {
+    nav.innerHTML = `
+      <a href="#posts" data-page="posts">Posts</a>
+      <a href="#posts/create" data-page="posts/create">Create Post</a>
+      <a href="#profile" data-page="profile">Profile</a>
+      <button id="logoutBtn">Logout</button>
+    `;
+
+    // Add logout handler
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      try {
+        await logout();
+        router.navigateTo("/");
+        await updateNavigation();
+        showMessage("Logged out successfully", false);
+      } catch (error) {
+        console.error("Logout error:", error);
+        showMessage("Error logging out", true);
+      }
+    });
+  } else {
+    nav.innerHTML = `
+      <a href="#/" data-page="/">Home</a>
+      <a href="#signup" data-page="signup">Sign Up</a>
+      <a href="#login" data-page="login">Login</a>
+    `;
+  }
 }
 
 function showMessage(message, isError = true) {
@@ -178,83 +269,426 @@ function showMessage(message, isError = true) {
   msgElement.textContent = message;
 
   // Style the message
-  msgElement.style.padding = "10px";
-  msgElement.style.margin = "10px 0";
-  msgElement.style.borderRadius = "5px";
+  msgElement.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 5px;
+    z-index: 1000;
+    font-weight: 500;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: ${isError ? "#fee" : "#efe"};
+    color: ${isError ? "#c33" : "#060"};
+    border: 1px solid ${isError ? "#fcc" : "#cfc"};
+  `;
 
-  if (isError) {
-    msgElement.style.backgroundColor = "#ffdddd";
-    msgElement.style.color = "#ff0000";
-    msgElement.style.border = "1px solid #ff0000";
-  } else {
-    msgElement.style.backgroundColor = "#ddffdd";
-    msgElement.style.color = "#008800";
-    msgElement.style.border = "1px solid #008800";
-  }
+  document.body.appendChild(msgElement);
 
-  // Add to the appropriate form
-  const currentPage = window.location.hash.substring(1);
-  if (currentPage === "signup") {
-    const form = document.getElementById("form");
-    if (form)
-      form
-        .querySelector('button[type="submit"]')
-        .insertAdjacentElement("beforebegin", msgElement);
-  } else if (currentPage === "login") {
-    const form = document.querySelector("#login form");
-    if (form)
-      form
-        .querySelector('button[type="submit"]')
-        .insertAdjacentElement("beforebegin", msgElement);
-  }
-
-  // Auto dismiss success messages
-  if (!isError) {
-    setTimeout(() => {
-      msgElement.remove();
-    }, 5000);
-  }
+  // Auto dismiss messages
+  setTimeout(
+    () => {
+      if (msgElement.parentNode) {
+        msgElement.remove();
+      }
+    },
+    isError ? 5000 : 3000
+  );
 }
 
-// Auth functions
-export function isAuthenticated() {
-  // We'll check with the server if the session is valid
-  return fetch("/api/check-auth", {
-    credentials: "include",
-  })
-    .then((response) => response.ok)
-    .catch(() => false);
-}
+// Posts Manager Class
+class PostsManager {
+  constructor(router) {
+    this.router = router;
+    this.currentCategory = "";
+    this.posts = [];
+    this.currentPost = null;
+    this.comments = [];
+  }
 
-export function logout() {
-  return fetch("/api/logout", {
-    method: "POST",
-    credentials: "include",
-  });
-}
+  // Main Posts List View
+  async renderPostsList(category = "") {
+    this.currentCategory = category;
+    const container = document.querySelector("main");
+    container.innerHTML = this.getPostsListTemplate();
+    await this.loadPosts(category);
+    this.setupPostsListeners();
+  }
 
-export async function updateNavigation(router) {
-  const nav = document.querySelector("nav");
-  const isLoggedIn = await isAuthenticated();
-
-  if (isLoggedIn) {
-    nav.innerHTML = `
-      <a href="#posts" data-page="posts">Posts</a>
-      <a href="#profile" data-page="profile">Profile</a>
-      <button id="logoutBtn">Logout</button>
+  getPostsListTemplate() {
+    return `
+      <div class="posts-container">
+        <div class="posts-header">
+          <h2>Posts ${
+            this.currentCategory ? `- ${this.currentCategory}` : ""
+          }</h2>
+          <button class="btn btn-primary create-post-btn">Create New Post</button>
+        </div>
+        
+        <div class="category-filters">
+          <button class="category-btn ${
+            !this.currentCategory ? "active" : ""
+          }" data-category="">All</button>
+          <button class="category-btn ${
+            this.currentCategory === "general" ? "active" : ""
+          }" data-category="general">General</button>
+          <button class="category-btn ${
+            this.currentCategory === "tech" ? "active" : ""
+          }" data-category="tech">Tech</button>
+          <button class="category-btn ${
+            this.currentCategory === "gaming" ? "active" : ""
+          }" data-category="gaming">Gaming</button>
+          <button class="category-btn ${
+            this.currentCategory === "sports" ? "active" : ""
+          }" data-category="sports">Sports</button>
+        </div>
+        
+        <div id="posts-list" class="posts-list">
+          <div class="loading">Loading posts...</div>
+        </div>
+      </div>
     `;
+  }
 
-    // Add logout handler
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await logout();
-      router.navigateTo("/");
-      updateNavigation(router);
+  // Create Post View
+  async renderCreatePost() {
+    const container = document.querySelector("main");
+    container.innerHTML = this.getCreatePostTemplate();
+    this.setupCreatePostListeners();
+  }
+
+  getCreatePostTemplate() {
+    return `
+      <div class="create-post-container">
+        <div class="create-post-header">
+          <h2>Create New Post</h2>
+          <button class="btn btn-secondary back-to-posts-btn">Back to Posts</button>
+        </div>
+        
+        <form id="create-post-form" class="post-form">
+          <div class="form-group">
+            <label for="post-title">Title *</label>
+            <input type="text" id="post-title" name="title" required placeholder="Enter post title...">
+          </div>
+          
+          <div class="form-group">
+            <label for="post-category">Category</label>
+            <select id="post-category" name="category_id">
+              <option value="general">General</option>
+              <option value="tech">Technology</option>
+              <option value="gaming">Gaming</option>
+              <option value="sports">Sports</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="post-content">Content *</label>
+            <textarea id="post-content" name="content" required placeholder="Write your post content..." rows="8"></textarea>
+          </div>
+          
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Create Post</button>
+            <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    `;
+  }
+
+  // Single Post View with Comments
+  async renderPostView(postId) {
+    const container = document.querySelector("main");
+    container.innerHTML = '<div class="loading">Loading post...</div>';
+
+    try {
+      const response = await fetch(`/api/posts/comments?id=${postId}`, {
+        credentials: "include",
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch post");
+
+      const data = await response.json();
+      this.currentPost = data.post;
+      this.comments = data.comments || [];
+
+      container.innerHTML = this.getPostViewTemplate();
+      this.setupPostViewListeners();
+    } catch (error) {
+      container.innerHTML = `<div class="error">Error loading post: ${error.message}</div>`;
+    }
+  }
+
+  getPostViewTemplate() {
+    if (!this.currentPost) return '<div class="error">Post not found</div>';
+
+    return `
+      <div class="post-view-container">
+        <div class="post-view-header">
+          <button class="btn btn-secondary back-to-posts-btn">← Back to Posts</button>
+        </div>
+        
+        <article class="post-detail">
+          <header class="post-header">
+            <h1>${this.escapeHtml(this.currentPost.title)}</h1>
+            <div class="post-meta">
+              <span class="category">${this.currentPost.category_id}</span>
+              <span class="date">${this.formatDate(
+                this.currentPost.created_at
+              )}</span>
+              <div class="post-reactions">
+                <button class="reaction-btn like-btn">👍 ${
+                  this.currentPost.like_count || 0
+                }</button>
+                <button class="reaction-btn dislike-btn">👎 ${
+                  this.currentPost.dislike_count || 0
+                }</button>
+              </div>
+            </div>
+          </header>
+          
+          <div class="post-content">
+            ${this.escapeHtml(this.currentPost.content).replace(/\n/g, "<br>")}
+          </div>
+        </article>
+        
+        <section class="comments-section">
+          <h3>Comments (${this.comments.length})</h3>
+          
+          <form id="comment-form" class="comment-form">
+            <textarea id="comment-body" name="body" required placeholder="Write a comment..." rows="3"></textarea>
+            <button type="submit" class="btn btn-primary">Add Comment</button>
+          </form>
+          
+          <div id="comments-list" class="comments-list">
+            ${this.renderComments()}
+          </div>
+        </section>
+      </div>
+    `;
+  }
+
+  renderComments() {
+    if (this.comments.length === 0) {
+      return '<p class="no-comments">No comments yet. Be the first to comment!</p>';
+    }
+
+    return this.comments
+      .map(
+        (comment) => `
+      <div class="comment">
+        <div class="comment-header">
+          <span class="comment-author">User ${comment.user_id}</span>
+          <span class="comment-date">${this.formatDate(
+            comment.created_at
+          )}</span>
+        </div>
+        <div class="comment-body">
+          ${this.escapeHtml(comment.body).replace(/\n/g, "<br>")}
+        </div>
+      </div>
+    `
+      )
+      .join("");
+  }
+
+  // API Methods
+  async loadPosts(category = "") {
+    try {
+      const url = category ? `/api/posts?category=${category}` : `/api/posts`;
+      const response = await fetch(url, { credentials: "include" });
+
+      if (!response.ok) throw new Error("Failed to fetch posts");
+
+      this.posts = await response.json();
+      this.renderPostsListUpdate();
+    } catch (error) {
+      document.getElementById(
+        "posts-list"
+      ).innerHTML = `<div class="error">Error loading posts: ${error.message}</div>`;
+    }
+  }
+
+  renderPostsListUpdate() {
+    const postsContainer = document.getElementById("posts-list");
+
+    if (this.posts.length === 0) {
+      postsContainer.innerHTML = '<div class="no-posts">No posts found.</div>';
+      return;
+    }
+
+    postsContainer.innerHTML = this.posts
+      .map(
+        (post) => `
+      <article class="post-card" data-post-id="${post.id}">
+        <header class="post-card-header">
+          <h3>${this.escapeHtml(post.title)}</h3>
+          <span class="post-category">${post.category_id}</span>
+        </header>
+        <div class="post-preview">
+          ${this.escapeHtml(post.content.substring(0, 150))}${
+          post.content.length > 150 ? "..." : ""
+        }
+        </div>
+        <footer class="post-card-footer">
+          <span class="post-date">${this.formatDate(post.created_at)}</span>
+          <div class="post-stats">
+            <span>👍 ${post.like_count || 0}</span>
+            <span>👎 ${post.dislike_count || 0}</span>
+          </div>
+        </footer>
+      </article>
+    `
+      )
+      .join("");
+  }
+
+  async createPost(formData) {
+    try {
+      const postData = {
+        title: formData.get("title"),
+        content: formData.get("content"),
+        category_id: formData.get("category_id"),
+        user_id: "temp-user-id", // This will be handled by backend from session
+      };
+
+      const response = await fetch(`/api/posts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(postData),
+      });
+
+      if (response.ok) {
+        this.router.navigateTo("posts");
+        showMessage("Post created successfully!", false);
+      } else {
+        const error = await response.text();
+        throw new Error(error || "Failed to create post");
+      }
+    } catch (error) {
+      showMessage(`Error creating post: ${error.message}`, true);
+    }
+  }
+
+  async addComment(postId, commentBody) {
+    try {
+      const commentData = {
+        post_id: postId,
+        user_id: "temp-user-id", // This will be handled by backend from session
+        body: commentBody,
+      };
+
+      const response = await fetch(`/api/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(commentData),
+      });
+
+      if (response.ok) {
+        const newComment = await response.json();
+        this.comments.push(newComment);
+        document.getElementById("comments-list").innerHTML =
+          this.renderComments();
+        document.getElementById("comment-form").reset();
+        showMessage("Comment added successfully!", false);
+      } else {
+        const error = await response.text();
+        throw new Error(error || "Failed to add comment");
+      }
+    } catch (error) {
+      showMessage(`Error adding comment: ${error.message}`, true);
+    }
+  }
+
+  // Event Listeners
+  setupPostsListeners() {
+    // Category filter buttons
+    document.querySelectorAll(".category-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const category = btn.dataset.category;
+        this.filterByCategory(category);
+      });
     });
-  } else {
-    nav.innerHTML = `
-      <a href="#/" data-page="/">Home</a>
-      <a href="#signup" data-page="signup">Sign Up</a>
-      <a href="#login" data-page="login">Login</a>
-    `;
+
+    // Create post button
+    document
+      .querySelector(".create-post-btn")
+      ?.addEventListener("click", () => {
+        this.router.navigateTo("posts/create");
+      });
+
+    // Post cards click
+    document.querySelectorAll(".post-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        const postId = card.dataset.postId;
+        this.router.navigateTo(`posts/view/${postId}`);
+      });
+    });
+  }
+
+  setupCreatePostListeners() {
+    const form = document.getElementById("create-post-form");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      await this.createPost(formData);
+    });
+
+    document
+      .querySelector(".back-to-posts-btn")
+      ?.addEventListener("click", () => {
+        this.router.navigateTo("posts");
+      });
+
+    document.querySelector(".cancel-btn")?.addEventListener("click", () => {
+      this.router.navigateTo("posts");
+    });
+  }
+
+  setupPostViewListeners() {
+    const commentForm = document.getElementById("comment-form");
+    commentForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const commentBody = document.getElementById("comment-body").value.trim();
+      if (commentBody) {
+        await this.addComment(this.currentPost.id, commentBody);
+      }
+    });
+
+    document
+      .querySelector(".back-to-posts-btn")
+      ?.addEventListener("click", () => {
+        this.router.navigateTo("posts");
+      });
+  }
+
+  // Navigation helpers
+  filterByCategory(category) {
+    if (category) {
+      this.router.navigateTo(`posts/category/${category}`);
+    } else {
+      this.router.navigateTo("posts");
+    }
+  }
+
+  // Utility Methods
+  formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
   }
 }
+
+// Make PostsManager available globally for debugging
+window.postsManager = postsManager;
