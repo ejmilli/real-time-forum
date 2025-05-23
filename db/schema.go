@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-// InitializeSchema runs the SQL to set up the users and sessions tables
+// InitializeSchema sets up all required tables for the app
 func InitializeSchema(db *sql.DB) {
 	createUsersTable := `
 	CREATE TABLE IF NOT EXISTS users (
@@ -25,33 +25,34 @@ func InitializeSchema(db *sql.DB) {
 		user_id TEXT NOT NULL,
 		nickname TEXT NOT NULL,
 		expires_at DATETIME NOT NULL,
+		last_active DATETIME NOT NULL,
 		FOREIGN KEY(user_id) REFERENCES users(id)
 	);`
 
 	createPostsTable := `
-	  CREATE TABLE IF NOT EXISTS posts (
-		  id Text PRIMARY KEY, 
-			user_id TEXT NOT NULL, 
-			title TEXT NOT NULL, 
-			body TEXT NOT NULL, 
-			likes INTEGER DEFAULT 0, 
-		  dislikes INTEGER DEFAULT 0, 
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY(user_id) REFERENCES users(id)
-		)
-	`
+	CREATE TABLE IF NOT EXISTS posts (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    category_id TEXT NOT NULL DEFAULT 'general',
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    likes INTEGER DEFAULT 0,
+    dislikes INTEGER DEFAULT 0,
+    created_at DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+		
+);`
 
 	createCommentsTable := `
-	  CREATE TABLE IF NOT EXISTS comments (
-		   id TEXT PRIMARY KEY,
-    post_id TEXT NOT NULL,
-    user_id TEXT NOT NULL,
-    body TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(post_id) REFERENCES posts(id),
-    FOREIGN KEY(user_id) REFERENCES users(id)
-		)
-	`
+	CREATE TABLE IF NOT EXISTS comments (
+		id TEXT PRIMARY KEY,
+		post_id TEXT NOT NULL,
+		user_id TEXT NOT NULL,
+		body TEXT NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY(post_id) REFERENCES posts(id),
+		FOREIGN KEY(user_id) REFERENCES users(id)
+	);`
 
 	_, err := db.Exec(createUsersTable)
 	if err != nil {
@@ -72,5 +73,6 @@ func InitializeSchema(db *sql.DB) {
 	if err != nil {
 		log.Fatalf("error creating comments table: %v", err)
 	}
+
 	log.Println("✅ Database schema initialized successfully.")
 }

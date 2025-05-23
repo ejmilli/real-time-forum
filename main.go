@@ -19,12 +19,18 @@ func LoggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+func ActivityMiddleware(db *sql.DB, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handlers.UpdateLastActive(db, w, r)
+		next(w, r)
+	}
+}
+
 func main() {
-	// Set up logging
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	log.Println("Starting server...")
 
-	// Connect to database
+	// Connect to DB
 	dbConn, err := sql.Open("sqlite3", "./yourdb.sqlite")
 	if err != nil {
 		log.Fatal(err)
@@ -34,19 +40,23 @@ func main() {
 	db.InitializeSchema(dbConn)
 	log.Println("Database schema initialized")
 
-	// Set up static file server
-	fs := http.FileServer(http.Dir("./"))
+	// Static assets (index.html, JS, CSS)
+	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/", fs)
 
-	// Set up API routes with logging
+	// Auth routes
 	http.HandleFunc("/signup", LoggingMiddleware(handlers.SignupHandler(dbConn)))
 	http.HandleFunc("/login", LoggingMiddleware(handlers.LoginHandler(dbConn)))
-
-	// Session management endpoints
-	http.HandleFunc("/api/check-auth", LoggingMiddleware(handlers.CheckAuthHandler(dbConn)))
 	http.HandleFunc("/api/logout", LoggingMiddleware(handlers.LogoutHandler(dbConn)))
+	http.HandleFunc("/api/check-auth", LoggingMiddleware(handlers.CheckAuthHandler(dbConn)))
 
-	// Start server
-	fmt.Println("Server running on :8080")
+	// Posts API
+http.HandleFunc("/api/posts", LoggingMiddleware(ActivityMiddleware(dbConn, handlers.PostsHandler(dbConn))))
+
+	// Online presence
+	http.HandleFunc("/api/online-users", LoggingMiddleware(ActivityMiddleware(dbConn, handlers.OnlineUsersHandler(dbConn))))
+
+	// Run the server
+	fmt.Println("Server running at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

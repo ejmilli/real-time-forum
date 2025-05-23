@@ -1,5 +1,6 @@
-// Updated app.js
+// Fixed app.js with proper routing and authentication
 import { Router } from "./router.js";
+import { setupPostsPage } from "./posts.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const router = new Router();
@@ -9,22 +10,96 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Auth routes
   router.addRoute("signup", "signupTemplate", () => {
-    setupSignupForm();
+    setupSignupForm(router);
   });
 
   router.addRoute("login", "loginTemplate", () => {
-    setupLoginForm();
-  });
-  
-  // Posts route
-  router.addRoute("posts", "postsTemplate", () => {
-    // Setup for posts page if needed
+    setupLoginForm(router);
   });
 
+  // Posts route
+  router.addRoute("posts", "postsTemplate", async () => {
+    console.log("Posts route activated");
+
+    // Check authentication first
+    const auth = await isAuthenticated();
+    if (!auth) {
+      console.log("User not authenticated, redirecting to login");
+      router.navigateTo("login");
+      return;
+    }
+
+    console.log("User authenticated, setting up posts page");
+
+    // Setup posts page functionality
+    setupPostsPage();
+
+    // Set up online users functionality
+    setupOnlineUsers();
+  });
+
+  // Start router and update navigation
   router.start();
+  updateNavigation(router);
 });
 
-function setupSignupForm() {
+// Auth functions
+function isAuthenticated() {
+  // Check with the server if the session is valid
+  return fetch("/api/check-auth", {
+    credentials: "include",
+  })
+    .then((response) => {
+      console.log("Auth check response:", response.status);
+      return response.ok;
+    })
+    .catch((error) => {
+      console.error("Auth check error:", error);
+      return false;
+    });
+}
+
+function logout() {
+  return fetch("/api/logout", {
+    method: "POST",
+    credentials: "include",
+  });
+}
+
+async function updateNavigation(router) {
+  console.log("Updating navigation...");
+  const nav = document.querySelector("nav");
+  if (!nav) {
+    console.error("Navigation element not found");
+    return;
+  }
+
+  const isLoggedIn = await isAuthenticated();
+  console.log("User logged in:", isLoggedIn);
+
+  if (isLoggedIn) {
+    nav.innerHTML = `
+      <a href="#posts" data-page="posts">Posts</a>
+      <a href="#profile" data-page="profile">Profile</a>
+      <button id="logoutBtn">Logout</button>
+    `;
+
+    // Add logout handler
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await logout();
+      router.navigateTo("/");
+      updateNavigation(router);
+    });
+  } else {
+    nav.innerHTML = `
+      <a href="#/" data-page="/">Home</a>
+      <a href="#signup" data-page="signup">Sign Up</a>
+      <a href="#login" data-page="login">Login</a>
+    `;
+  }
+}
+
+function setupSignupForm(router) {
   console.log("Setting up signup form");
   const form = document.querySelector("#form");
 
@@ -64,7 +139,7 @@ function setupSignupForm() {
 
         // Redirect to login after successful signup
         setTimeout(() => {
-          window.location.hash = "#login";
+          router.navigateTo("login");
         }, 2000);
       } else {
         showMessage(result || "Signup failed", true);
@@ -76,9 +151,9 @@ function setupSignupForm() {
   });
 }
 
-function setupLoginForm() {
+function setupLoginForm(router) {
   console.log("Setting up login form");
-  const form = document.querySelector("#login form");
+  const form = document.querySelector("#loginForm");
 
   if (!form) {
     console.error("Login form not found");
@@ -95,7 +170,7 @@ function setupLoginForm() {
     // Set default selection
     nicknameRadio.checked = true;
     emailInput.style.display = "none";
-    
+
     nicknameRadio.addEventListener("change", () => {
       nicknameInput.style.display = "block";
       emailInput.style.display = "none";
@@ -111,51 +186,80 @@ function setupLoginForm() {
     e.preventDefault();
     console.log("Login form submitted");
 
-    // Get form data manually to ensure correct values
-    const loginType = form.querySelector('input[name="loginType"]:checked').value;
-    const nickname = loginType === "nickname" ? form.querySelector('#nickname').value.trim() : "";
-    const email = loginType === "email" ? form.querySelector('#email').value.trim() : "";
-    const password = form.querySelector('#password').value;
-
-    // Validation
-    if (loginType === "nickname" && !nickname) {
-      showMessage("Nickname is required", true);
-      return;
-    }
-    
-    if (loginType === "email" && !email) {
-      showMessage("Email is required", true);
-      return;
-    }
-    
-    if (!password) {
-      showMessage("Password is required", true);
-      return;
-    }
-
-    // The server expects form URL encoded data, not FormData
-    const formData = new URLSearchParams();
-    formData.append("loginType", loginType);
-    formData.append("nickname", nickname);
-    formData.append("email", email);
-    formData.append("password", password);
-
     try {
+      // Get form data manually to ensure correct values
+      const loginTypeElement = form.querySelector(
+        'input[name="loginType"]:checked'
+      );
+
+      if (!loginTypeElement) {
+        showMessage("Please select login type (Nickname or Email)", true);
+        return;
+      }
+
+      const loginType = loginTypeElement.value;
+      console.log("Login type selected:", loginType);
+
+      const nickname =
+        loginType === "nickname"
+          ? form.querySelector("#nickname").value.trim()
+          : "";
+      const email =
+        loginType === "email" ? form.querySelector("#email").value.trim() : "";
+      const password = form.querySelector("#password").value;
+
+      console.log("Form values:", {
+        loginType,
+        nickname: nickname ? "✓" : "",
+        email: email ? "✓" : "",
+        password: password ? "✓" : "",
+      });
+
+      // Validation
+      if (loginType === "nickname" && !nickname) {
+        showMessage("Nickname is required", true);
+        return;
+      }
+
+      if (loginType === "email" && !email) {
+        showMessage("Email is required", true);
+        return;
+      }
+
+      if (!password) {
+        showMessage("Password is required", true);
+        return;
+      }
+
+      // Use URL-encoded form data since that's what the server expects
+      const formData = new URLSearchParams();
+      formData.append("loginType", loginType);
+      formData.append("nickname", nickname);
+      formData.append("email", email);
+      formData.append("password", password);
+
+      console.log("Sending data to server:", formData.toString());
+
       const response = await fetch("/login", {
         method: "POST",
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: formData.toString()
+        body: formData.toString(),
       });
 
       const result = await response.text();
+      console.log("Server response:", result);
 
       if (response.ok) {
         showMessage("Login successful! Redirecting...", false);
+
+        // Important: Update navigation BEFORE redirecting
+        await updateNavigation(router);
+
         // Redirect to posts page after successful login
         setTimeout(() => {
-          window.location.hash = "#posts";
+          router.navigateTo("posts");
         }, 1500);
       } else {
         showMessage(result || "Login failed", true);
@@ -165,6 +269,47 @@ function setupLoginForm() {
       showMessage("An error occurred. Please try again.", true);
     }
   });
+}
+
+function setupOnlineUsers() {
+  function updateOnlineUsers() {
+    fetch("/api/online-users", { credentials: "include" })
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        }
+        throw new Error("Failed to fetch online users");
+      })
+      .then((users) => {
+        const list = document.getElementById("onlineUsersList");
+        if (list) {
+          list.innerHTML = users
+            .map(
+              (user) =>
+                `<li class="online-user" data-nickname="${user}">${user}</li>`
+            )
+            .join("");
+        }
+      })
+      .catch((error) => {
+        console.error("Error updating online users:", error);
+      });
+  }
+
+  // Update online users immediately and then every 30 seconds
+  updateOnlineUsers();
+  const onlineUsersInterval = setInterval(updateOnlineUsers, 30000);
+
+  // Clean up interval when leaving the page
+  window.addEventListener(
+    "hashchange",
+    () => {
+      if (window.location.hash !== "#posts") {
+        clearInterval(onlineUsersInterval);
+      }
+    },
+    { once: true }
+  );
 }
 
 function showMessage(message, isError = true) {
@@ -201,7 +346,7 @@ function showMessage(message, isError = true) {
         .querySelector('button[type="submit"]')
         .insertAdjacentElement("beforebegin", msgElement);
   } else if (currentPage === "login") {
-    const form = document.querySelector("#login form");
+    const form = document.querySelector("#loginForm");
     if (form)
       form
         .querySelector('button[type="submit"]')
@@ -216,45 +361,32 @@ function showMessage(message, isError = true) {
   }
 }
 
-// Auth functions
-export function isAuthenticated() {
-  // We'll check with the server if the session is valid
-  return fetch("/api/check-auth", {
-    credentials: "include",
-  })
-    .then((response) => response.ok)
-    .catch(() => false);
-}
-
-export function logout() {
-  return fetch("/api/logout", {
-    method: "POST",
-    credentials: "include",
-  });
-}
-
-export async function updateNavigation(router) {
-  const nav = document.querySelector("nav");
-  const isLoggedIn = await isAuthenticated();
-
-  if (isLoggedIn) {
-    nav.innerHTML = `
-      <a href="#posts" data-page="posts">Posts</a>
-      <a href="#profile" data-page="profile">Profile</a>
-      <button id="logoutBtn">Logout</button>
-    `;
-
-    // Add logout handler
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await logout();
-      router.navigateTo("/");
-      updateNavigation(router);
-    });
-  } else {
-    nav.innerHTML = `
-      <a href="#/" data-page="/">Home</a>
-      <a href="#signup" data-page="signup">Sign Up</a>
-      <a href="#login" data-page="login">Login</a>
-    `;
+// Register event listeners for navigation links
+document.addEventListener("click", (e) => {
+  if (e.target.matches("[data-page]")) {
+    e.preventDefault();
+    const page = e.target.getAttribute("data-page");
+    window.location.hash = page;
   }
+});
+
+// WebSocket setup (if you have WebSocket functionality)
+try {
+  const socket = new WebSocket(`wss://${window.location.host}/ws`);
+  socket.onmessage = (event) => {
+    if (event.data === "presence_update") {
+      // Update online users if on posts page
+      if (window.location.hash === "#posts") {
+        setupOnlineUsers();
+      }
+    }
+  };
+  socket.onerror = (error) => {
+    console.log(
+      "WebSocket error (this is normal if WS not implemented):",
+      error
+    );
+  };
+} catch (error) {
+  console.log("WebSocket not available:", error);
 }
