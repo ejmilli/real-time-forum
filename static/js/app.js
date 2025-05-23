@@ -1,17 +1,15 @@
-// Updated app.js - Integrated with Posts, Router, and Auth
+// app.js - Clean integrated version
 import { Router } from "./router.js";
-import { isAuthenticated, logout } from "./auth.js";
+import { isAuthenticated, logout, getCurrentUser } from "./auth.js";
 
 let router;
 let postsManager;
 
 document.addEventListener("DOMContentLoaded", () => {
   router = new Router();
-
-  // Initialize the posts manager
   postsManager = new PostsManager(router);
 
-  // Home route (landing page)
+  // Home route
   router.addRoute("/", "homeTemplate", () => {
     updateNavigation();
   });
@@ -27,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateNavigation();
   });
 
-  // Posts routes - these will be handled by PostsManager
+  // Posts routes - handled by PostsManager
   router.addRoute("posts", "postsTemplate", async () => {
     if (await checkAuthAndRedirect()) {
       await postsManager.renderPostsList();
@@ -60,9 +58,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Profile route (placeholder)
+  // Profile route
   router.addRoute("profile", "profileTemplate", async () => {
     if (await checkAuthAndRedirect()) {
+      await renderProfile();
       updateNavigation();
     }
   });
@@ -71,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
   updateNavigation();
 });
 
-// Check if user is authenticated, redirect to login if not
+// Authentication check
 async function checkAuthAndRedirect() {
   const authenticated = await isAuthenticated();
   if (!authenticated) {
@@ -82,29 +81,14 @@ async function checkAuthAndRedirect() {
   return true;
 }
 
+// Setup forms
 function setupSignupForm() {
-  console.log("Setting up signup form");
   const form = document.querySelector("#form");
-
-  if (!form) {
-    console.error("Signup form not found");
-    return;
-  }
+  if (!form) return;
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    console.log("Form submitted");
-
     const formData = new FormData(form);
-
-    console.log("Form data collected:");
-    for (const [name, value] of formData.entries()) {
-      if (name !== "password" && name !== "confirmPassword") {
-        console.log(` ${name}: ${value}`);
-      } else {
-        console.log(` ${name}: [HIDDEN]`);
-      }
-    }
 
     try {
       const response = await fetch("/signup", {
@@ -113,31 +97,23 @@ function setupSignupForm() {
       });
 
       const result = await response.text();
-      console.log("Server response:", result);
 
       if (response.ok) {
         showMessage("Signup successful! Redirecting to login...", false);
-        setTimeout(() => {
-          router.navigateTo("login");
-        }, 2000);
+        setTimeout(() => router.navigateTo("login"), 2000);
       } else {
         showMessage(result || "Signup failed", true);
       }
     } catch (error) {
-      console.error("Error during signup:", error);
+      console.error("Signup error:", error);
       showMessage("An error occurred. Please try again.", true);
     }
   });
 }
 
 function setupLoginForm() {
-  console.log("Setting up login form");
   const form = document.querySelector("#login form");
-
-  if (!form) {
-    console.error("Login form not found");
-    return;
-  }
+  if (!form) return;
 
   // Handle login type toggle
   const nicknameRadio = form.querySelector("#nicknameRadio");
@@ -162,7 +138,6 @@ function setupLoginForm() {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    console.log("Login form submitted");
 
     const loginType = form.querySelector(
       'input[name="loginType"]:checked'
@@ -180,12 +155,10 @@ function setupLoginForm() {
       showMessage("Nickname is required", true);
       return;
     }
-
     if (loginType === "email" && !email) {
       showMessage("Email is required", true);
       return;
     }
-
     if (!password) {
       showMessage("Password is required", true);
       return;
@@ -200,9 +173,8 @@ function setupLoginForm() {
     try {
       const response = await fetch("/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        credentials: "include",
         body: formData.toString(),
       });
 
@@ -210,34 +182,39 @@ function setupLoginForm() {
 
       if (response.ok) {
         showMessage("Login successful! Redirecting...", false);
-        // Update navigation after successful login
         await updateNavigation();
-        setTimeout(() => {
-          router.navigateTo("posts");
-        }, 1500);
+        setTimeout(() => router.navigateTo("posts"), 1500);
       } else {
         showMessage(result || "Login failed", true);
       }
     } catch (error) {
-      console.error("Error during login:", error);
+      console.error("Login error:", error);
       showMessage("An error occurred. Please try again.", true);
     }
   });
 }
 
+// Navigation
 async function updateNavigation() {
   const nav = document.querySelector("nav");
   const authenticated = await isAuthenticated();
 
   if (authenticated) {
+    const user = await getCurrentUser();
+    const username = user ? user.nickname : "User";
+
     nav.innerHTML = `
-      <a href="#posts" data-page="posts">Posts</a>
-      <a href="#posts/create" data-page="posts/create">Create Post</a>
-      <a href="#profile" data-page="profile">Profile</a>
-      <button id="logoutBtn">Logout</button>
+      <div class="nav-left">
+        <a href="#posts" data-page="posts">Posts</a>
+        <a href="#posts/create" data-page="posts/create">Create Post</a>
+      </div>
+      <div class="nav-right">
+        <span class="username">Welcome, ${username}!</span>
+        <a href="#profile" data-page="profile">Profile</a>
+        <button id="logoutBtn">Logout</button>
+      </div>
     `;
 
-    // Add logout handler
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       try {
         await logout();
@@ -258,17 +235,43 @@ async function updateNavigation() {
   }
 }
 
+// Profile page
+async function renderProfile() {
+  const user = await getCurrentUser();
+  const container = document.querySelector("main");
+
+  if (!user) {
+    container.innerHTML = '<div class="error">Unable to load profile</div>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="profile-container">
+      <h2>My Profile</h2>
+      <div class="profile-info">
+        <p><strong>Nickname:</strong> ${user.nickname}</p>
+        <p><strong>Email:</strong> ${user.email || "Not provided"}</p>
+        <p><strong>Joined:</strong> ${new Date(
+          user.created_at
+        ).toLocaleDateString()}</p>
+      </div>
+      
+      <div class="profile-actions">
+        <button class="btn btn-primary" onclick="router.navigateTo('posts')">View My Posts</button>
+        <button class="btn btn-secondary" onclick="router.navigateTo('posts/create')">Create New Post</button>
+      </div>
+    </div>
+  `;
+}
+
+// Message system
 function showMessage(message, isError = true) {
-  // Remove any existing message
   const existingMsg = document.querySelector(".message");
   if (existingMsg) existingMsg.remove();
 
-  // Create message element
   const msgElement = document.createElement("div");
   msgElement.className = `message ${isError ? "error" : "success"}`;
   msgElement.textContent = message;
-
-  // Style the message
   msgElement.style.cssText = `
     position: fixed;
     top: 20px;
@@ -284,19 +287,10 @@ function showMessage(message, isError = true) {
   `;
 
   document.body.appendChild(msgElement);
-
-  // Auto dismiss messages
-  setTimeout(
-    () => {
-      if (msgElement.parentNode) {
-        msgElement.remove();
-      }
-    },
-    isError ? 5000 : 3000
-  );
+  setTimeout(() => msgElement.remove(), isError ? 5000 : 3000);
 }
 
-// Posts Manager Class
+// PostsManager Class
 class PostsManager {
   constructor(router) {
     this.router = router;
@@ -306,7 +300,6 @@ class PostsManager {
     this.comments = [];
   }
 
-  // Main Posts List View
   async renderPostsList(category = "") {
     this.currentCategory = category;
     const container = document.querySelector("main");
@@ -350,7 +343,6 @@ class PostsManager {
     `;
   }
 
-  // Create Post View
   async renderCreatePost() {
     const container = document.querySelector("main");
     container.innerHTML = this.getCreatePostTemplate();
@@ -395,7 +387,6 @@ class PostsManager {
     `;
   }
 
-  // Single Post View with Comments
   async renderPostView(postId) {
     const container = document.querySelector("main");
     container.innerHTML = '<div class="loading">Loading post...</div>';
@@ -477,7 +468,7 @@ class PostsManager {
         (comment) => `
       <div class="comment">
         <div class="comment-header">
-          <span class="comment-author">User ${comment.user_id}</span>
+          <span class="comment-author">${comment.user_nickname || "User"}</span>
           <span class="comment-date">${this.formatDate(
             comment.created_at
           )}</span>
@@ -530,6 +521,9 @@ class PostsManager {
         }
         </div>
         <footer class="post-card-footer">
+          <span class="post-author">by ${
+            post.user_nickname || "Anonymous"
+          }</span>
           <span class="post-date">${this.formatDate(post.created_at)}</span>
           <div class="post-stats">
             <span>👍 ${post.like_count || 0}</span>
@@ -547,8 +541,7 @@ class PostsManager {
       const postData = {
         title: formData.get("title"),
         content: formData.get("content"),
-        category_id: formData.get("category_id"),
-        user_id: "temp-user-id", // This will be handled by backend from session
+        category_id: formData.get("category_id") || "general",
       };
 
       const response = await fetch(`/api/posts`, {
@@ -574,7 +567,6 @@ class PostsManager {
     try {
       const commentData = {
         post_id: postId,
-        user_id: "temp-user-id", // This will be handled by backend from session
         body: commentBody,
       };
 
@@ -603,7 +595,6 @@ class PostsManager {
 
   // Event Listeners
   setupPostsListeners() {
-    // Category filter buttons
     document.querySelectorAll(".category-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         const category = btn.dataset.category;
@@ -611,14 +602,12 @@ class PostsManager {
       });
     });
 
-    // Create post button
     document
       .querySelector(".create-post-btn")
       ?.addEventListener("click", () => {
         this.router.navigateTo("posts/create");
       });
 
-    // Post cards click
     document.querySelectorAll(".post-card").forEach((card) => {
       card.addEventListener("click", () => {
         const postId = card.dataset.postId;
@@ -663,7 +652,6 @@ class PostsManager {
       });
   }
 
-  // Navigation helpers
   filterByCategory(category) {
     if (category) {
       this.router.navigateTo(`posts/category/${category}`);
@@ -690,5 +678,5 @@ class PostsManager {
   }
 }
 
-// Make PostsManager available globally for debugging
+// Export for debugging
 window.postsManager = postsManager;

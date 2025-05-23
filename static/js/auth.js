@@ -1,9 +1,9 @@
-// auth.js - Updated for session management
+// auth.js - Updated for consistent session management
 export async function isAuthenticated() {
   try {
     const response = await fetch("/api/check-auth", {
       method: "GET",
-      credentials: "include", // Important: include cookies
+      credentials: "include",
     });
     return response.ok;
   } catch (error) {
@@ -16,7 +16,7 @@ export async function logout() {
   try {
     const response = await fetch("/api/logout", {
       method: "POST",
-      credentials: "include", // Important: include cookies
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -30,7 +30,7 @@ export async function logout() {
   }
 }
 
-// Get current user session info (if needed)
+// Get current user session info
 export async function getCurrentUser() {
   try {
     const response = await fetch("/api/user", {
