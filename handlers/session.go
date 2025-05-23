@@ -14,8 +14,7 @@ type Session struct {
 	ExpiresAt time.Time
 }
 
-
-
+// CreateSession creates a new session and sets consistent cookie
 func CreateSession(db *sql.DB, w http.ResponseWriter, userID, nickname string) (string, error) {
 	sessionID, _ := uuid.NewV4()
 	sid := sessionID.String()
@@ -30,8 +29,9 @@ func CreateSession(db *sql.DB, w http.ResponseWriter, userID, nickname string) (
 		return "", err
 	}
 
+	// Use consistent cookie name "session_id"
 	http.SetCookie(w, &http.Cookie{
-		Name:     "session",
+		Name:     "session_id",
 		Value:    sid,
 		Path:     "/",
 		HttpOnly: true,
@@ -41,10 +41,9 @@ func CreateSession(db *sql.DB, w http.ResponseWriter, userID, nickname string) (
 	return sid, nil
 }
 
-
-
+// GetSession retrieves session with consistent cookie name
 func GetSession(db *sql.DB, r *http.Request) *Session {
-	cookie, err := r.Cookie("session")
+	cookie, err := r.Cookie("session_id")
 	if err != nil {
 		return nil
 	}
@@ -62,15 +61,15 @@ func GetSession(db *sql.DB, r *http.Request) *Session {
 	return &sess
 }
 
-
+// ClearSession removes session with consistent cookie name
 func ClearSession(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session")
+	cookie, err := r.Cookie("session_id")
 	if err == nil {
 		db.Exec(`DELETE FROM sessions WHERE id = ?`, cookie.Value)
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "session",
+		Name:     "session_id",
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"encoding/json"
 	"net/http"
 	"time"
 )
@@ -9,7 +10,7 @@ import (
 // CheckAuthHandler verifies if the user's session is valid
 func CheckAuthHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Get session cookie
+		// Get session cookie - using consistent name "session_id"
 		cookie, err := r.Cookie("session_id")
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -28,6 +29,59 @@ func CheckAuthHandler(db *sql.DB) http.HandlerFunc {
 
 		// Session is valid
 		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	}
+}
+
+// GetCurrentUserHandler returns current user info from session
+func GetCurrentUserHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Get session cookie
+		cookie, err := r.Cookie("session_id")
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		sessionID := cookie.Value
+		var userID, nickname string
+		var expiresAt time.Time
+
+		// Get user info from session
+		err = db.QueryRow(`
+			SELECT user_id, nickname, expires_at 
+			FROM sessions 
+			WHERE id = ?
+		`, sessionID).Scan(&userID, &nickname, &expiresAt)
+
+		if err != nil || expiresAt.Before(time.Now()) {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		// Get additional user details
+		var email, createdAt string
+		err = db.QueryRow(`
+			SELECT email, created_at 
+			FROM users 
+			WHERE id = ?
+		`, userID).Scan(&email, &createdAt)
+
+		if err != nil {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+
+		// Return user info
+		userInfo := map[string]interface{}{
+			"id":         userID,
+			"nickname":   nickname,
+			"email":      email,
+			"created_at": createdAt,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(userInfo)
 	}
 }
 
@@ -63,5 +117,6 @@ func LogoutHandler(db *sql.DB) http.HandlerFunc {
 		http.SetCookie(w, &expiredCookie)
 
 		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Logged out successfully"))
 	}
 }
