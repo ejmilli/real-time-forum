@@ -33,7 +33,7 @@ func InitializeSchema(db *sql.DB) {
 		  id Text PRIMARY KEY, 
 			user_id TEXT NOT NULL, 
 			title TEXT NOT NULL, 
-			body TEXT NOT NULL, 
+			content TEXT NOT NULL, 
 			likes INTEGER DEFAULT 0, 
 		  dislikes INTEGER DEFAULT 0, 
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

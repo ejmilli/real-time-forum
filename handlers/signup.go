@@ -8,20 +8,13 @@ import (
 	"strconv"
 	"strings"
 
+	"real-time-forum/models"
+
 	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type User struct {
-	ID           string
-	FirstName    string
-	LastName     string
-	Nickname     string
-	Age          int
-	Gender       string
-	Email        string
-	PasswordHash string
-}
+
 
 func SignupHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -81,7 +74,7 @@ func getFormValue(r *http.Request, keys []string) string {
 	return ""
 }
 
-func processAndValidateUser(firstName, lastName, nickname, ageStr, gender, email, password, confirmPassword string, db *sql.DB) (*User, error) {
+func processAndValidateUser(firstName, lastName, nickname, ageStr, gender, email, password, confirmPassword string, db *sql.DB) (*models.User, error) {
 	firstName = strings.TrimSpace(firstName)
 	lastName = strings.TrimSpace(lastName)
 	nickname = strings.TrimSpace(nickname)
@@ -119,7 +112,7 @@ func processAndValidateUser(firstName, lastName, nickname, ageStr, gender, email
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user")
 	}
-	return &User{
+	return &models.User{
 		ID:           id.String(),
 		FirstName:    firstName,
 		LastName:     lastName,
@@ -138,7 +131,7 @@ func checkExists(db *sql.DB, field, value string) (bool, error) {
 	return count > 0, err
 }
 
-func createUser(db *sql.DB, user *User) error {
+func createUser(db *sql.DB, user *models.User) error {
 	_, err := db.Exec(`
 		INSERT INTO users 
 		(id, first_name, last_name, nickname, age, gender, email, password_hash)
