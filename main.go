@@ -12,7 +12,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-
 // LoggingMiddleware logs HTTP requests
 func LoggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -27,12 +26,6 @@ func ActivityMiddleware(db *sql.DB, next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func ActivityMiddleware(db *sql.DB, next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handlers.UpdateLastActive(db, w, r)
-		next(w, r)
-	}
-}
 
 
 
