@@ -9,9 +9,6 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-
-
-
 // CreateSession inserts a new session and sets a cookie
 func CreateSession(db *sql.DB, w http.ResponseWriter, userID, nickname string) (string, error) {
 	sessionID, err := uuid.NewV4()
@@ -45,7 +42,7 @@ func CreateSession(db *sql.DB, w http.ResponseWriter, userID, nickname string) (
 
 
 
-func GetSession(db *sql.DB, r *http.Request) *Session {
+func GetSession(db *sql.DB, r *http.Request) *models.Session {
 	cookie, err := r.Cookie("session")
 	if err != nil {
 		return nil
