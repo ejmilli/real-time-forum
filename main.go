@@ -18,6 +18,12 @@ func LoggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		next(w, r)
 	}
 }
+func ActivityMiddleware(db *sql.DB, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handlers.UpdateLastActive(db, w, r)
+		next(w, r)
+	}
+}
 
 func main() {
 	// Set up logging
@@ -42,9 +48,15 @@ func main() {
 	http.HandleFunc("/signup", LoggingMiddleware(handlers.SignupHandler(dbConn)))
 	http.HandleFunc("/login", LoggingMiddleware(handlers.LoginHandler(dbConn)))
 
+	// post 
+	http.HandleFunc("/api/posts", LoggingMiddleware(ActivityMiddleware(dbConn, handlers.PostsHandler(dbConn))))
+
+
 	// Session management endpoints
 	http.HandleFunc("/api/check-auth", LoggingMiddleware(handlers.CheckAuthHandler(dbConn)))
 	http.HandleFunc("/api/logout", LoggingMiddleware(handlers.LogoutHandler(dbConn)))
+	// Add new endpoint
+	http.HandleFunc("/api/online-users", LoggingMiddleware(ActivityMiddleware(dbConn, handlers.OnlineUsersHandler(dbConn))))
 
 	// Start server
 	fmt.Println("Server running on :8080")

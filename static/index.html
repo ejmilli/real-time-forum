@@ -104,67 +104,66 @@
     </template>
 
     <!-- Login Section -->
-    <!-- Login Section -->
-<template id="loginTemplate">
-  <section id="login">
-    <div class="image-section">
-      <div class="shape-1"></div>
-      <div class="shape-2"></div>
-      <div class="image-content">
-        <h1>Welcome Back!</h1>
-        <p>
-          Log in to your account to continue your journey with us. We're
-          excited to show you what's new!
-        </p>
-      </div>
-    </div>
-    <div class="form-section">
-      <div class="form-container">
-        <form id="loginForm">
-          <h2>Login</h2>
-          <div class="input-group">
-            <label for="nicknameRadio">Nickname</label>
-            <input
-              type="radio"
-              name="loginType"
-              value="nickname"
-              id="nicknameRadio"
-              required
-            />
-            <label for="emailRadio">Email</label>
-            <input
-              type="radio"
-              name="loginType"
-              value="email"
-              id="emailRadio"
-              required
-            />
+    <template id="loginTemplate">
+      <section id="login">
+        <div class="image-section">
+          <div class="shape-1"></div>
+          <div class="shape-2"></div>
+          <div class="image-content">
+            <h1>Welcome Back!</h1>
+            <p>
+              Log in to your account to continue your journey with us. We're
+              excited to show you what's new!
+            </p>
           </div>
+        </div>
+        <div class="form-section">
+          <div class="form-container">
+            <form id="loginForm">
+              <h2>Login</h2>
+              <div class="input-group">
+                <label for="nicknameRadio">Nickname</label>
+                <input
+                  type="radio"
+                  name="loginType"
+                  value="nickname"
+                  id="nicknameRadio"
+                  required
+                />
+                <label for="emailRadio">Email</label>
+                <input
+                  type="radio"
+                  name="loginType"
+                  value="email"
+                  id="emailRadio"
+                  required
+                />
+              </div>
 
-          <div id="nicknameInput" class="input-group">
-            <label for="nickname">Enter your Nickname</label>
-            <input type="text" id="nickname" name="nickname" />
-          </div>
+              <div id="nicknameInput" class="input-group">
+                <label for="nickname">Enter your Nickname</label>
+                <input type="text" id="nickname" name="nickname" />
+              </div>
 
-          <div id="emailInput" class="input-group">
-            <label for="email">Enter your Email</label>
-            <input type="email" id="email" name="email" />
-          </div>
+              <div id="emailInput" class="input-group">
+                <label for="email">Enter your Email</label>
+                <input type="email" id="email" name="email" />
+              </div>
 
-          <div class="input-group">
-            <label for="password">Password</label>
-            <input type="password" name="password" id="password" required />
+              <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" required />
+              </div>
+              <p>
+                Don't have an account?
+                <a href="#signup" data-page="signup">SignUp</a>
+              </p>
+              <button class="btn" type="submit">Login</button>
+            </form>
           </div>
-          <p>
-            Don't have an account?
-            <a href="#signup" data-page="signup">SignUp</a>
-          </p>
-          <button class="btn" type="submit">Login</button>
-        </form>
-      </div>
-    </div>
-  </section>
-</template>
+        </div>
+      </section>
+    </template>
 
     <!--Home Page-->
 
@@ -280,76 +279,252 @@
       </div>
     </template>
 
-    <!-- Posts Template -->
+    <template id="chatTemplate">
+      <h2>Chat Room</h2>
+      <div
+        id="chatBox"
+        style="height: 300px; overflow-y: scroll; border: 1px solid #ccc"
+      ></div>
+      <div id="onlineUsersContainer">
+        <h3>Online Users</h3>
+        <ul id="onlineUsersList"></ul>
+      </div>
+      <input type="text" id="chatInput" placeholder="Type your message..." />
+      <button id="sendBtn">Send</button>
+    </template>
+    <!-- Online Users-->
+    <div id="onlineUsersContainer">
+      <h3>Currently Online</h3>
+      <ul id="onlineUsersList"></ul>
+    </div>
 
- 
-      <section id="posts">
-        <div class="posts-container">
-          <div class="posts-header">
-            <h1>Developer Confessions</h1>
-            <div class="post-actions">
-              <button id="newPostBtn" class="cta-button">New Confession</button>
-              <div class="filter-options">
-                <select id="filterPosts">
-                  <option value="all">All Confessions</option>
-                  <option value="popular">Most Popular</option>
-                  <option value="recent">Most Recent</option>
-                  <option value="controversial">Controversial</option>
-                </select>
-              </div>
+    <!-- Posts Template -->
+    <template id="postsTemplate">
+      <div class="forum-wrapper" style="display: flex">
+        <aside class="sidebar">
+          <h2>Categories</h2>
+          <ul id="category-list">
+            <li class="active" data-category="all">All Posts</li>
+            <li data-category="general">General</li>
+            <li data-category="golang">Golang</li>
+            <li data-category="html">HTML</li>
+            <li data-category="javascript">JavaScript</li>
+            <li data-category="css">CSS</li>
+          </ul>
+        </aside>
+
+        <section class="main-content">
+          <h1>My Forum</h1>
+          <div id="post-creator">
+            <h2>Create a Post</h2>
+            <input type="text" id="title" placeholder="Title" />
+            <select id="category-select">
+              <option value="general">General</option>
+              <option value="golang">Golang</option>
+              <option value="html">HTML</option>
+              <option value="javascript">JavaScript</option>
+              <option value="css">CSS</option>
+            </select>
+            <textarea
+              id="content"
+              placeholder="What's on your mind?"
+            ></textarea>
+            <button id="submit-post">Post</button>
+          </div>
+
+          <h2>Recent Posts</h2>
+          <div id="posts-container">
+            <!-- Posts will be displayed here -->
+            <p>Loading posts...</p>
+          </div>
+        </section>
+      </div>
+    </template>
+
+    <!-- Posts Details Template -->
+
+    <template id="postDetailsTemplate">
+      <div class="forum-wrapper" style="display: flex">
+        <aside class="sidebar">
+          <h2>Categories</h2>
+          <ul id="category-list">
+            <li class="active" data-category="all">All Posts</li>
+            <li data-category="general">General</li>
+            <li data-category="golang">Golang</li>
+            <li data-category="html">HTML</li>
+            <li data-category="javascript">JavaScript</li>
+            <li data-category="css">CSS</li>
+          </ul>
+        </aside>
+
+        <section class="main-content">
+          <a href="#posts" class="back-link">← Back to Posts</a>
+
+          <div id="post-details" class="post-detail">
+            <!-- Post details will be displayed here -->
+            <p>Loading post...</p>
+          </div>
+
+          <div class="comments-section">
+            <h3>Comments</h3>
+
+            <div class="comment-form">
+              <textarea
+                id="comment-text"
+                placeholder="Write a comment..."
+              ></textarea>
+              <button id="submit-comment">Post Comment</button>
+            </div>
+
+            <div id="comments-container">
+              <!-- Comments will be displayed here -->
+              <p>Loading comments...</p>
             </div>
           </div>
-
-          <div id="newPostForm" class="hidden">
-            <form id="createPostForm">
-              <h3>Share Your Developer Confession</h3>
-              <div class="input-group">
-                <label for="postTitle">Title</label>
-                <input
-                  type="text"
-                  id="postTitle"
-                  name="title"
-                  required
-                  placeholder="E.g., 'I secretly hate TypeScript'"
-                />
-              </div>
-              <div class="input-group">
-                <label for="postContent">Confession</label>
-                <textarea
-                  id="postContent"
-                  name="content"
-                  rows="4"
-                  required
-                  placeholder="Share your developer secrets..."
-                ></textarea>
-              </div>
-              <div class="input-group">
-                <label for="postTags">Tags (comma separated)</label>
-                <input
-                  type="text"
-                  id="postTags"
-                  name="tags"
-                  placeholder="E.g., javascript, frontend, debugging"
-                />
-              </div>
-              <div class="form-buttons">
-                <button type="button" id="cancelPostBtn" class="cancel-btn">
-                  Cancel
-                </button>
-                <button type="submit" class="submit-btn">Confess</button>
-              </div>
-            </form>
-          </div>
-
-          <div id="postsContainer" class="posts-list">
-            <!-- Posts will be loaded dynamically here -->
-            <div class="loading-spinner">Loading confessions...</div>
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </template>
 
     <!-- Script -->
     <script type="module" src="js/app.js"></script>
+    <!-- Add this to your existing HTML, just before the closing </body> tag -->
+
+    <div
+      id="debug-section"
+      style="
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        width: 300px;
+        background: white;
+        border: 2px solid #007bff;
+        border-radius: 8px;
+        padding: 10px;
+        z-index: 1000;
+        font-size: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      "
+    >
+      <h4 style="margin: 0 0 10px 0; color: #007bff">🔍 Debug Panel</h4>
+      <div>
+        Session:
+        <span id="debug-session" style="font-weight: bold">Checking...</span
+        ><br />
+        API: <span id="debug-api" style="font-weight: bold">Testing...</span
+        ><br />
+        DOM: <span id="debug-dom" style="font-weight: bold">Checking...</span>
+      </div>
+      <button
+        onclick="runQuickDebug()"
+        style="
+          margin-top: 10px;
+          padding: 5px 10px;
+          background: #007bff;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        "
+      >
+        🔄 Debug
+      </button>
+      <button
+        onclick="document.getElementById('debug-section').style.display='none'"
+        style="
+          margin-top: 10px;
+          padding: 5px 10px;
+          background: #dc3545;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        "
+      >
+        ✕ Hide
+      </button>
+    </div>
+
+    <script>
+      // Quick debug functions - add these to your existing JavaScript
+      function debugStatus(elementId, status, color) {
+        const element = document.getElementById(elementId);
+        if (element) {
+          element.textContent = status;
+          element.style.color = color;
+        }
+      }
+
+      async function runQuickDebug() {
+        console.log("=== QUICK DEBUG START ===");
+
+        // Test DOM elements
+        const elements = [
+          "posts-container",
+          "submit-post",
+          "category-list",
+          "title",
+          "content",
+          "category-select",
+        ];
+        const missingElements = elements.filter(
+          (id) => !document.getElementById(id)
+        );
+
+        if (missingElements.length === 0) {
+          debugStatus("debug-dom", "✓ All found", "green");
+          console.log("✓ All DOM elements found");
+        } else {
+          debugStatus(
+            "debug-dom",
+            `✗ Missing: ${missingElements.join(", ")}`,
+            "red"
+          );
+          console.log("✗ Missing DOM elements:", missingElements);
+        }
+
+        // Test session
+        try {
+          const sessionResponse = await fetch("/api/check-auth", {
+            credentials: "include",
+          });
+          if (sessionResponse.ok) {
+            debugStatus("debug-session", "✓ Authenticated", "green");
+            console.log("✓ Session valid");
+          } else {
+            debugStatus("debug-session", "✗ Not authenticated", "red");
+            console.log("✗ Session invalid:", sessionResponse.status);
+          }
+        } catch (e) {
+          debugStatus("debug-session", "✗ Check failed", "red");
+          console.log("✗ Session check error:", e.message);
+        }
+
+        // Test API
+        try {
+          const apiResponse = await fetch("/api/posts", {
+            credentials: "include",
+          });
+          if (apiResponse.ok) {
+            const posts = await apiResponse.json();
+            debugStatus("debug-api", `✓ ${posts.length} posts`, "green");
+            console.log("✓ API working, posts:", posts.length);
+          } else {
+            const errorText = await apiResponse.text();
+            debugStatus("debug-api", `✗ Error ${apiResponse.status}`, "red");
+            console.log("✗ API error:", apiResponse.status, errorText);
+          }
+        } catch (e) {
+          debugStatus("debug-api", "✗ Request failed", "red");
+          console.log("✗ API request error:", e.message);
+        }
+
+        console.log("=== QUICK DEBUG END ===");
+      }
+
+      // Auto-run debug when page loads (if debug panel exists)
+      if (document.getElementById("debug-section")) {
+        setTimeout(runQuickDebug, 1000);
+      }
+    </script>
   </body>
 </html>
