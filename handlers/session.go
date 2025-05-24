@@ -3,17 +3,13 @@ package handlers
 import (
 	"database/sql"
 	"net/http"
+	"real-time-forum/models"
 	"time"
 
 	"github.com/gofrs/uuid"
 )
 
 
-type Session struct {
-	UserID    string
-	Nickname  string
-	ExpiresAt time.Time
-}
 
 
 // CreateSession inserts a new session and sets a cookie
@@ -35,8 +31,9 @@ func CreateSession(db *sql.DB, w http.ResponseWriter, userID, nickname string) (
 		return "", err
 	}
 
+	// Use consistent cookie name "session_id"
 	http.SetCookie(w, &http.Cookie{
-		Name:     "session",
+		Name:     "session_id",
 		Value:    sid,
 		Path:     "/",
 		HttpOnly: true,
@@ -46,14 +43,15 @@ func CreateSession(db *sql.DB, w http.ResponseWriter, userID, nickname string) (
 	return sid, nil
 }
 
-// GetSession retrieves the session info if valid
+
+
 func GetSession(db *sql.DB, r *http.Request) *Session {
 	cookie, err := r.Cookie("session")
 	if err != nil {
 		return nil
 	}
 
-	var sess Session
+	var sess models.Session
 	err = db.QueryRow(`
 		SELECT user_id, nickname, expires_at FROM sessions WHERE id = ?`,
 		cookie.Value,
@@ -69,18 +67,24 @@ func GetSession(db *sql.DB, r *http.Request) *Session {
 		time.Now(), time.Now().Add(15*time.Minute), cookie.Value,
 	)
 
-	return &sess
+	// Optionally refresh session expiry on activity
+	_, _ = db.Exec(`
+		UPDATE sessions SET last_active = ?, expires_at = ? WHERE id = ?`,
+		time.Now(), time.Now().Add(15*time.Minute), cookie.Value,
+	)
+
+	return &models.Session{}
 }
 
 // ClearSession deletes session from DB and clears cookie
 func ClearSession(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session")
+	cookie, err := r.Cookie("session_id")
 	if err == nil {
 		db.Exec(`DELETE FROM sessions WHERE id = ?`, cookie.Value)
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "session",
+		Name:     "session_id",
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,

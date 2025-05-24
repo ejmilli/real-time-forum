@@ -3,13 +3,15 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"net/http"
+
+	"log"
 	"real-time-forum/db"
 	"real-time-forum/handlers"
 
 	_ "github.com/mattn/go-sqlite3"
 )
+
 
 // LoggingMiddleware logs HTTP requests
 func LoggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
@@ -25,12 +27,19 @@ func ActivityMiddleware(db *sql.DB, next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func main() {
-	// Set up logging
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	log.Println("Starting server...")
+func ActivityMiddleware(db *sql.DB, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handlers.UpdateLastActive(db, w, r)
+		next(w, r)
+	}
+}
 
-	// Connect to database
+
+
+	// Connect to DB
+
+func main() {
+
 	dbConn, err := sql.Open("sqlite3", "./yourdb.sqlite")
 	if err != nil {
 		log.Fatal(err)
@@ -38,13 +47,12 @@ func main() {
 	defer dbConn.Close()
 
 	db.InitializeSchema(dbConn)
-	log.Println("Database schema initialized")
 
-	// Set up static file server
-	fs := http.FileServer(http.Dir("./"))
+	// Static assets (index.html, JS, CSS)
+	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/", fs)
 
-	// Set up API routes with logging
+	// Auth routes
 	http.HandleFunc("/signup", LoggingMiddleware(handlers.SignupHandler(dbConn)))
 	http.HandleFunc("/login", LoggingMiddleware(handlers.LoginHandler(dbConn)))
 
@@ -58,7 +66,15 @@ func main() {
 	// Add new endpoint
 	http.HandleFunc("/api/online-users", LoggingMiddleware(ActivityMiddleware(dbConn, handlers.OnlineUsersHandler(dbConn))))
 
-	// Start server
-	fmt.Println("Server running on :8080")
+	// Posts API
+http.HandleFunc("/api/posts", LoggingMiddleware(ActivityMiddleware(dbConn, handlers.PostsHandler(dbConn))))
+
+	// Online presence
+	http.HandleFunc("/api/online-users", LoggingMiddleware(ActivityMiddleware(dbConn, handlers.OnlineUsersHandler(dbConn))))
+
+	// Run the server
+	fmt.Println("Server running at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
+
+
 }

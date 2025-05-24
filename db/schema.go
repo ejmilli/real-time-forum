@@ -29,7 +29,6 @@ CREATE TABLE IF NOT EXISTS sessions (
 	FOREIGN KEY(user_id) REFERENCES users(id)
 );`
 
-
 	createPostsTable := `
 	CREATE TABLE IF NOT EXISTS posts (
 		id TEXT PRIMARY KEY, 
@@ -66,7 +65,6 @@ CREATE TABLE IF NOT EXISTS comments (
 	if err != nil {
 		log.Fatalf("error creating sessions table: %v", err)
 	}
-
 
 	_, err = db.Exec(createPostsTable) 
 	if err != nil {

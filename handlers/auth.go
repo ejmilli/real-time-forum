@@ -63,6 +63,28 @@ func OnlineUsersHandler(db *sql.DB) http.HandlerFunc {
 			if err := rows.Scan(&nickname); err != nil {
 				log.Printf("Error scanning nickname: %v", err)
 				continue
+<<<<<<< HEAD
+=======
+			}
+			users = append(users, nickname)
+		}
+
+		json.NewEncoder(w).Encode(users)
+	}
+}
+
+// UpdateLastActive updates the session's last_active timestamp if valid
+func UpdateLastActive(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+	session := GetSession(db, r)
+	if session != nil && session.ExpiresAt.After(time.Now()) {
+		if cookie, err := r.Cookie("session"); err == nil {
+			_, err = db.Exec(
+				"UPDATE sessions SET last_active = ? WHERE id = ?",
+				time.Now(), cookie.Value,
+			)
+			if err != nil {
+				log.Printf("Last active update error: %v", err)
+>>>>>>> 871cb08b141a25c5be94dbaeb5f14199565af00c
 			}
 			users = append(users, nickname)
 		}

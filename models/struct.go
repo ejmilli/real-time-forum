@@ -2,6 +2,10 @@ package models
 
 import "time"
 
+
+
+
+
 type User struct {
 	ID           string
 	FirstName    string
@@ -32,4 +36,10 @@ type Comment struct {
 	UserID    string    `json:"user_id"`
 	Body      string    `json:"body"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+type Session struct {
+	UserID    string
+	Nickname  string
+	ExpiresAt time.Time
 }

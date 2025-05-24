@@ -52,8 +52,19 @@ function isAuthenticated() {
   return fetch("/api/check-auth", {
     credentials: "include",
   })
+<<<<<<< HEAD
     .then((response) => response.ok)
     .catch(() => false);
+=======
+    .then((response) => {
+      console.log("Auth check response:", response.status);
+      return response.ok;
+    })
+    .catch((error) => {
+      console.error("Auth check error:", error);
+      return false;
+    });
+>>>>>>> 871cb08b141a25c5be94dbaeb5f14199565af00c
 }
 
 function logout() {
@@ -268,6 +279,47 @@ function setupLoginForm(router) {
   });
 }
 
+function setupOnlineUsers() {
+  function updateOnlineUsers() {
+    fetch("/api/online-users", { credentials: "include" })
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        }
+        throw new Error("Failed to fetch online users");
+      })
+      .then((users) => {
+        const list = document.getElementById("onlineUsersList");
+        if (list) {
+          list.innerHTML = users
+            .map(
+              (user) =>
+                `<li class="online-user" data-nickname="${user}">${user}</li>`
+            )
+            .join("");
+        }
+      })
+      .catch((error) => {
+        console.error("Error updating online users:", error);
+      });
+  }
+
+  // Update online users immediately and then every 30 seconds
+  updateOnlineUsers();
+  const onlineUsersInterval = setInterval(updateOnlineUsers, 30000);
+
+  // Clean up interval when leaving the page
+  window.addEventListener(
+    "hashchange",
+    () => {
+      if (window.location.hash !== "#posts") {
+        clearInterval(onlineUsersInterval);
+      }
+    },
+    { once: true }
+  );
+}
+
 function showMessage(message, isError = true) {
   // Remove any existing message
   const existingMsg = document.querySelector(".message");
@@ -326,6 +378,7 @@ document.addEventListener("click", (e) => {
   }
 });
 
+<<<<<<< HEAD
 // WebSocket for real-time updates
 function setupWebSocket() {
   const socket = new WebSocket(`wss://${window.location.host}/ws`);
@@ -367,4 +420,25 @@ function updateOnlineUsers() {
     .catch((err) => {
       console.error("Error fetching online users:", err);
     });
+=======
+// WebSocket setup (if you have WebSocket functionality)
+try {
+  const socket = new WebSocket(`wss://${window.location.host}/ws`);
+  socket.onmessage = (event) => {
+    if (event.data === "presence_update") {
+      // Update online users if on posts page
+      if (window.location.hash === "#posts") {
+        setupOnlineUsers();
+      }
+    }
+  };
+  socket.onerror = (error) => {
+    console.log(
+      "WebSocket error (this is normal if WS not implemented):",
+      error
+    );
+  };
+} catch (error) {
+  console.log("WebSocket not available:", error);
+>>>>>>> 871cb08b141a25c5be94dbaeb5f14199565af00c
 }
